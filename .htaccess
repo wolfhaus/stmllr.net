@@ -31,3 +31,5 @@ RewriteRule ^blog/typo3-caching-framework-throws-client-error-with-broken-php5-m
 RewriteRule ^blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian-squeeze/index.html$ https://stmllr.net/blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian/index.html [R=301,L]
 RewriteRule ^blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-datawrap/$ https://stmllr.net/blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-dataw/ [R=301,L]
 RewriteRule ^blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-datawrap/index.html$ https://stmllr.net/blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-dataw/index.html [R=301,L]
+
+ErrorDocument 404 /404.html
