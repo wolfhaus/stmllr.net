@@ -1,0 +1,90 @@
+---
+layout: post
+title: TYPO3 caching framework throws CLIENT_ERROR with broken php5-memcache package from Debian Squeeze
+date: 2011-02-14 18:19
+excerpt: The TYPO3 caching framework in TYPO3 4.5.0 runs into troubles when using memcached backend on Debian Squeeze. It seems that Squeeze ships a broken php5-memcache package, which does not fit the API of memcached 1.4.4. Since Squeeze is already released, there will be no fix in the official stable repository. But I provide a fixed package for download.
+tags: 
+  - TYPO3
+  - Caching
+  - Memcached
+  - Debian
+  - Bugs
+  - PHP
+---
+
+<section>
+	<p>The&nbsp;php5-memcache package implements parts of outdated memcached API. Deleting entries with expiration
+	time does not work properly. The memcache backend of the TYPO3 caching framework in 4.5.0 does so and runs into
+	troubles. It throws an error:
+	</p>
+	<pre>CLIENT_ERROR bad command line format.&nbsp; Usage: delete &lt;key&gt; [noreply]</pre>
+	<p>You can find details about this issue in the PECL bugtracker in bug <a
+			href="http://pecl.php.net/bugs/bug.php?id=17566" title="Bug report in PECL" class="external-link">#16927</a>
+		and <a href="http://pecl.php.net/bugs/bug.php?id=17566" title="bug report in PECL"
+			   class="external-link">#17566</a>.
+	</p>
+
+	<p>Unfortunately Squeeze was released before I realized this issue. That means there will be no fixed package in the
+		stable repository because of release policy. At the time of writing this article, I also could not find a fixed
+		package somewhere else. The <a href="http://news.php.net/php.pecl.cvs/14325"
+									   title="Revision log for pecl bug #17566" class="external-link">original patch</a>
+		from upstream is a two-liner, so I took the chance to fix it and build a new package myself.
+	</p>
+
+	<p>You can <a href="http://www.t3node.com/debian/php5-memcache_3.0.4-4+t3node-1_amd64.deb"
+				  title="php5-memcache package for Debian Squeeze" class="external-link">download the fixed
+		php5-memcache package</a> and use it as-is. ATM there's only a built for amd64. If you need other ports, please
+		leave a comment. I am sorry that there's no &quot;real&quot; package repository, but I did not have&nbsp;the
+		time to set it up properly. Maybe I find some later.
+	</p>
+
+	<p>This is&nbsp;how to install the package:
+	</p>
+	<pre>$ cd /tmp/<br/>$ wget http://www.t3node.com/debian/php5-memcache_3.0.4-4+t3node-1_amd64.deb<br/>$ sudo dpkg --install /tmp/php5-memcache_3.0.4-4+t3node-1_amd64.deb</pre>
+	<p>Use at your own risk since this package comes with NO WARRANTY and is provided AS-IS. There's also a tarball with
+		the <a href="http://www.t3node.com/debian/php-memcache_3.0.4.orig.tar.gz" title="Source code of php5-memcache"
+			   class="external-link">source code available for download</a>.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://www.typofree.org" rel="external">Michiel Roos</a></span>
+			<time class="comment-time" datetime="2011-02-14 20:14">on February 14, 2011 at 20:14</time>
+			<p>
+				Hi,<br/>
+				<br/>
+				I noticed this too. There's a patch for this problem:<br/>
+				http://bugs.typo3.org/view.php?id=15721<br/>
+				<br/>
+				Kind regards,<br/>
+				<br/>
+				<br/>
+				Michiel Roos
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Elijah Velez</span>
+			<time class="comment-time" datetime="2012-11-05 14:24">on November 05, 2012 at 14:24</time>
+			<p>
+				It is really a awesome and beneficial details about TYPO3 caching framework throws CLIENT_ERROR with
+				broken php5-memcache package from Debian Squeeze . I’m grateful that you basically distributed this
+				beneficial details with us. Please keep us advised like this. Thank you for discussing.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-11-05 16:20">on November 05, 2012 at 16:20</time>
+			<p>
+				Erm. These spam bots get more and more pushy these days.
+			</p>
+		</li>
+
+	</ol>
+</section>

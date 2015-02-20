@@ -1,0 +1,33 @@
+<FilesMatch "\.(js|css|png)$">
+        Header unset Last-Modified
+        FileETag MTime Size
+        ExpiresActive on
+        ExpiresDefault "access plus 7 days"
+</FilesMatch>
+
+# Enable URL rewriting
+RewriteEngine On
+
+#shorturls
+RewriteRule ^logging$ http://forge.typo3.org/projects/typo3v4-logging [R=301,L]
+RewriteRule ^logging-docs$ http://docs.typo3.org/typo3cms/CoreApiReference/ApiOverview/Logging/Index.html [R=301,L]
+
+# Sitemap
+RewriteRule ^sitemap$ https://stmllr.net/sitemap.xml [R=301,L]
+RewriteRule ^sitemap/$ https://stmllr.net/sitemap.xml [R=301,L]
+
+# Fix bad names
+RewriteRule ^blog/combining-fluid-and-typoscript-in-typo3-5-examples/$ https://stmllr.net/blog/combining-fluid-viewhelpers-and-typoscript-in-typo3-5-basic-examples/ [R=301,L]
+RewriteRule ^blog/make-the-output-of-fe-plugins-configurable-with-basewrap/$ https://stmllr.net/blog/fe-plugins-need-configurable-basewrap-instead-of-static-pi-wrapinbaseclass/ [R=301,L]
+RewriteRule ^blog/added-doxygen-page-with-typo3api-of-trunk/$ https://stmllr.net/blog/added-doxygen-code-documentation-of-typo3-trunk/ [R=301,L]
+RewriteRule ^blog/writing-a-basic-fluid-viewhelper/$ https://stmllr.net/blog/writing-a-basic-fluid-viewhelper-for-typo3/ [R=301,L]
+RewriteRule ^blog/live-streaming-audio-with-darkice-and-icecast2-on-raspberry-pi/$ https://stmllr.net/blog/live-mp3-streaming-from-audio-in-with-darkice-and-icecast2-on-raspberry-pi/ [R=301,L]
+
+# Relaunch 2015/02 rewites
+RewriteRule ^blog/live-streaming-mp3-audio-with-darkice-and-icecast2-on-raspberry-pi/$ https://stmllr.net/blog/live-mp3-streaming-from-audio-in-with-darkice-and-icecast2-on-raspberry-pi/ [R=301,L]
+RewriteRule ^blog/slides-and-video-of-our-talk-at-typo3-conference-t3con11-about-lazy-development-using-the-extensio/$ https://stmllr.net/blog/slides-and-video-of-our-talk-at-typo3-conference-t3con11-about-lazy-development-using-t/ [R=301,L]
+RewriteRule ^blog/slides-and-video-of-our-talk-at-typo3-conference-t3con11-about-lazy-development-using-the-extensio/index.html$ https://stmllr.net/blog/slides-and-video-of-our-talk-at-typo3-conference-t3con11-about-lazy-development-using-t/index.html [R=301,L]
+RewriteRule ^blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian-squeeze/$ https://stmllr.net/blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian/ [R=301,L]
+RewriteRule ^blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian-squeeze/index.html$ https://stmllr.net/blog/typo3-caching-framework-throws-client-error-with-broken-php5-memcache-package-from-debian/index.html [R=301,L]
+RewriteRule ^blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-datawrap/$ https://stmllr.net/blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-dataw/ [R=301,L]
+RewriteRule ^blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-datawrap/index.html$ https://stmllr.net/blog/security-in-typoscript-applying-stdwrap-functions-like-htmlspecialchars-to-data-in-dataw/index.html [R=301,L]

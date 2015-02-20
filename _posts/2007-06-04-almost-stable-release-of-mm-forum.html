@@ -1,0 +1,39 @@
+---
+layout: post
+title: almost stable release of mm_forum
+date: 2007-06-04 19:23
+excerpt: Mittwald CM Service uploaded their latest version of the webforum extension mm_forum to TER. Eight weeks after the first alpha release, the extension now entered a beta state, but is actually called "almost stable" by the developers themselves.
+tags: 
+  - TYPO3
+  - Extensions
+  - Performance
+  - FE plugin
+---
+
+<section>
+	<p>The extension in particular drives the popular german TYPO3 forum at <a href="http://www.typo3.net"
+																					title="TYPO3 community webforum"
+																					class="external-link">www.typo3.net</a>
+	and thus seems to be fit for higher load environments. Unfortunately, I don't have any statistics (like traffic
+	peaks) so this assumption is pure theory. According to Mittwald, 19.000 users have registered at typo3.net and
+	230.000 postings have been written yet. But without any knowledge about the data distribution, this is just a bunch
+	of numbers (probably growing since 2001).<br/>
+	</p>
+
+	<p>The forum is shipped with a build-in crawler and search engine, optimized for searching forum postings - a wise
+		decision, since indexed_search is almost infamous for causing heavy load and timeouts in large scale
+		environments.
+	</p>
+
+	<p>A first look at the database tables reveals the use of indexes for some columns/tables. Indexes can speed up
+		SELECT statements but are yet rarely implemented in any extension. Anyway, thanks to the efforts of core-dev <a
+				href="http://typo3bloke.net/" title="Website of Dmitry Dulepov" class="external-link">Dmitry Dulepov</a>,
+		they are meanwhile common in core and sysext tables.
+	</p>
+
+	<p>The extension is available via extension repository or directly via <a
+			href="http://typo3.org/extensions/repository/view/mm_forum/0.1.0/"
+			title="mm_forum in the extension repository at typo3.org" class="external-link">typo3.org</a>.</p>
+</section>
+
+{% include post-taglist.html %}

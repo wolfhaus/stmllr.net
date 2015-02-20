@@ -1,0 +1,77 @@
+---
+layout: post
+title: Nested domains in a single TYPO3 pagetree
+date: 2008-07-31 20:03
+excerpt: A common scenario in maintaining websites is to have a handful of websites, each with little content and a single person who is in charge of the content. Why not throw everything into a single TYPO3 installation?
+tags: 
+  - TYPO3
+  - TypoScript
+  - Multiple Domains
+  - Nested Domains
+---
+
+<section>
+	<p>Maintaining multiple domains inside one TYPO3 instance is possible. But it can be tricky, especially when using
+		RealURL and domains are nested. You need to carry together the neccessary configuration options. Until today
+		this is not as easy as you might think. The following prerequisites are essential, additional to your usual
+		setup:
+	</p>
+	<ul>
+		<li>Use TYPO3 Version 4.2 (because HMENU does not use typolink in &gt;=4.1)</li>
+		<li>use RealURL Version &gt;=1.4.0</li>
+		<li>setup TypoScript of all rootpage templates (the first three items of course can be merged into a global
+			template):
+		</li>
+		<br/>
+		<pre>config {<br/> &nbsp;&nbsp;simulateStaticDocuments = 0<br/> &nbsp;&nbsp;tx_realurl_enable = 1<br/>   # render internal links between domains<br/> &nbsp;&nbsp;typolinkCheckRootline = 1 <br/> &nbsp;&nbsp;baseURL = <a
+				href="http://mydomain.com/">mydomain.com</a><br/>}</pre>
+		<li>set domain record in every rootpage</li>
+		<li>set the rootlevel flag in the rootpage templates</li>
+		<li>set the &quot;Is root of website&quot; flag in the rootpage properties. This is essential for nested
+			domains.
+		</li>
+		<li>set the rootpage_id for every domain in the RealURL configuration part in typo3conf/localconf.php:</li>
+		<br/>
+		<pre> $TYPO3_CONF_VARS['EXTCONF']['realurl'] = array(<br/>   'www.foo.com' =&gt; array(<br/>     'pagePath' =&gt; array(<br/>       'rootpage_id' = 1234<br/>   ...<br/>   ),<br/>   'www.bar.com' =&gt; array (<br/>     'pagePath' =&gt; array(<br/>       'rootpage_id' = 5678<br/>   ...<br/>   ),<br/> </pre>
+	</ul>
+	<p>However, you could still run into problems. Keep your eyes open for recent patches in the TYPO3-core list and
+		related bugs.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://www.sk-typo3.de" rel="external">Steffen Kamper</a></span>
+			<time class="comment-time" datetime="2008-08-26 16:38">on August 26, 2008 at 16:38</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				thanks for the tip. Unfortunally there seems missing a recursive check, as this works only with pages
+				having this flag. If only parent page has "is root" it doesn't work :(
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">durtro</span>
+			<time class="comment-time" datetime="2009-03-04 20:23">on March 04, 2009 at 20:23</time>
+			<p>
+				Where can I find this check flag?<br/>
+				<br/>
+				Thank you!
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen Müller</span>
+			<time class="comment-time" datetime="2009-03-04 21:33">on March 04, 2009 at 21:33</time>
+			<p>
+				Steffen means the "Is root of website" flag in the page properties.
+			</p>
+		</li>
+
+	</ol>
+</section>

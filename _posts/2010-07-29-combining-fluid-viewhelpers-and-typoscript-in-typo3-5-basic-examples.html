@@ -1,0 +1,248 @@
+---
+layout: post
+title: Combining Fluid ViewHelpers and TypoScript in TYPO3 - 5 basic examples
+date: 2010-07-29 17:42
+excerpt: Here comes another blog article about TYPO3 after a long time of absence. This time I introduce the Fluid cObject ViewHelper, which brings together the power of TypoScript and Fluid. I will demonstrate the usage of this ViewHelper in five basic examples.
+tags: 
+  - Fluid
+  - TypoScript
+  - ViewHelper
+  - cObject
+  - TYPO3
+---
+
+<section>
+	<h3> 1. Simple usage of the cObject ViewHelper: A breadcrumb menu</h3>
+
+	<p>Any website with hierarchical pages should have a breadcrumb menu.<br/>The TypoScript in this example creates a
+		breadcrumb menu by using a HMENU of type rootline. The Fluid ViewHelper gets the result from this cObject and
+		displays it in the template.
+	</p>
+	<h4>Fluid:</h4>
+	<pre>&lt;f:cObject typoscriptObjectPath=&quot;lib.breadcrumb&quot; /&gt;</pre>
+	<h4>TypoScript:</h4>
+	<pre>lib.breadcrumb = HMENU<br/>lib.breadcrumb {<br/>&nbsp; special = rootline<br/>&nbsp; special.range = 0|-1<br/>&nbsp; 1 = TMENU<br/>&nbsp; 1 {<br/>&nbsp;&nbsp;&nbsp; NO.linkWrap = | &gt;&gt;<br/>&nbsp;&nbsp;&nbsp; CUR = 1<br/>&nbsp;&nbsp;&nbsp; CUR.doNotLinkIt = 1<br/>&nbsp; }<br/>}</pre>
+	<h4>Result:</h4>
+	<pre>Home &gt;&gt; Learning TYPO3 &gt;&gt; Fluid examples </pre>
+	<h3>2. Passing static values from Fluid to TypoScript: Let TypoScript calculate some numbers</h3>
+
+	<p>Let's assume that you have some math homework and need to calculate some numbers.<br/>All we need to do is to
+		tell Fluid our arithmetic problem in the &quot;data&quot; parameter. This value is passed to TypoScript as the
+		current value, where we do the calculation. The result of this calculation is returned to the template.
+	</p>
+	<h4>Fluid:</h4>
+	<pre>20 + 22 = &lt;f:cObject typoscriptObjectPath=&quot;lib.math&quot; data=&quot;20+22&quot; /&gt;</pre>
+	<h4>TypoScript:</h4>
+	<pre>lib.math = TEXT<br/>lib.math {<br/>&nbsp; current = 1<br/>&nbsp; prioriCalc = 1<br/>}</pre>
+	<h4>Result:</h4>
+	<pre>20 + 22 = 42</pre>
+	<p>This is a very simple demonstration. To make this more comfortable, you would probably use the form ViewHelper to
+		have a form field to enter the calculation task.
+	</p>
+
+	<h3>3. Passing dynamic values from Fluid to TypoScript: Render a video with flashplayer, using an URL from an object
+		property.</h3>
+
+	<p>In this example we have a website with a video podcast. We want to show the video of each podcast episode using a
+		flashplayer (like youtube does for example). The videos itself are stored as mp4 files somewhere in the cloud.
+		So all we need to have is the URL of the video as a property of the episode object.
+	</p>
+	<h4>Fluid:</h4>
+	<pre>&lt;f:cObject typoscriptObjectPath=&quot;lib.flashPlayer&quot; data=&quot;{episode.url}&quot; /&gt;</pre>
+	<h4>TypoScript:</h4>
+	<pre>lib.flashPlayer = SWFOBJECT<br/>lib.flashPlayer {<br/>&nbsp; file.current = 1<br/>&nbsp; width = 400<br/>&nbsp; height = 300<br/>&nbsp; type = video<br/>&nbsp; layout = ###SWFOBJECT###<br/>&nbsp; video.player = typo3/contrib/flashmedia/flvplayer.swf<br/>&nbsp; forcePlayer = 1<br/>}</pre>
+	<h4>Result:</h4>
+
+	<p><img alt="Video Player" style="padding: 8px;" src="/files/images/video.png" height="299" width="400"/>&nbsp;
+	</p>
+
+	<h3>4. Alternative notations for passing dynamic data: Again a Flash video of a podcast</h3>
+
+	<p>We use the same example like above, but introduce some alternative notations. This should help to get an idea
+		about how Fluid notation can look like.
+	</p>
+	<h4>Fluid:</h4>
+	<pre>A. &lt;f:cObject typoscriptObjectPath=&quot;lib.flashPlayer&quot; data=&quot;{episode.url}&quot; /&gt;<br/><br/>B. {episode.url -&gt; f:cObject(typoscriptObjectPath: 'lib.flashPlayer')}<br/><br/>C. &lt;f:cObject typoscriptObjectPath=&quot;lib.flashPlayer&quot;&gt;{episode.url}&lt;/f:cObject&gt;<br/><br/>D. &lt;f:cObject typoscriptObjectPath=&quot;lib.flashPlayer&quot;&gt;&lt;f:cObject typoscriptObjectPath=&quot;lib.alternativeVideoUrl&quot; /&gt;&lt;/f:cObject&gt;</pre>
+	<h4>TypoScript:</h4>
+	<pre>lib.flashPlayer = SWFOBJECT<br/>lib.flashPlayer {<br/>&nbsp; file.current = 1<br/>&nbsp; width = 400<br/>&nbsp; height = 300<br/>&nbsp; type = video<br/>&nbsp; layout = ###SWFOBJECT###<br/>&nbsp; video.player = typo3/contrib/flashmedia/flvplayer.swf<br/>&nbsp; forcePlayer = 1<br/>}</pre>
+	<pre>lib.alternativeVideoUrl = TEXT<br/>lib.alternativeVideoUrl.value = http://www.example.com/my_video.mp4</pre>
+	<h4>Explanation of the Fluid notation: </h4>
+
+	<p>A. The first Fluid notation is taken from the above example. It represents the shorthand XML notation.
+	</p>
+
+	<p>B. The second one looks a bit complicated on the first sight. But it should give you an impression that you can
+		&quot;chain&quot; multiple ViewHelpers.
+	</p>
+
+	<p>C. The third example represents the XML notation with starttag and endtag and the value in between.
+	</p>
+
+	<p>D. The forth notation points to the fact, that you can pass nested ViewHelpers as data. (refered as the
+		renderChildren feature). In our case, the data which is passed to the lib.flashPlayer TS object is taken from
+		another TS object. Take into account, that any spaces and linebreaks also get passed and could cause unwanted
+		effects.
+	</p>
+
+	<h3>5. Passing whole objects to TypoScript: Show the price of a product only when the product is available.</h3>
+
+	<p>In the last example, we have a product object with a some properties like price, availability, description etc.
+		The two properties which are of interest here are price and availability. We only want to show the price, if the
+		product is available.
+	</p>
+	<h4>Fluid:</h4>
+	<pre>&lt;f:cObject typoscriptObjectPath=&quot;lib.productPrice&quot; data=&quot;{product}&quot; /&gt;</pre>
+	<h4>TypoScript:</h4>
+	<pre>lib.productPrice = TEXT<br/>lib.productPrice {<br/>&nbsp; field = price<br/>&nbsp; fieldRequired = available<br/>&nbsp; wrap = Price: |<br/>}</pre>
+	<h4>Result:</h4>
+	<pre>Price: 99,- $</pre>
+	<p>What we do here is to pass the full object to the cObject ViewHelper instead of only one property. This makes it
+		possible to use all properties of the product object in the TypoScript cObject. In the above example we check if
+		there's a value in the &quot;product.available&quot; property. Only if this condition is true, we show the
+		product.price. Of course this task could also be solved by using the if/then/else ViewHelper.
+	</p>
+
+	<h3>Summary</h3>
+
+	<p>The cObject Viewhelper combines the power of Fluid with TypoScript. Before you think about writing your own
+		ViewHelper to solve a task, you should think about solving this task with TypoScript. Especially if you york
+		with people which are new to Fluid, but TypoScript gurus. Not to forget that TypoScript Objects are far more
+		configurable for admins than PHP code of Fluid ViewHelpers are. If you know some more tricks with TypoScript and
+		Fluid, please share it with us and write a comment.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Sebastian Kurfürst</span>
+			<time class="comment-time" datetime="2010-07-30 07:01">on July 30, 2010 at 07:01</time>
+			<p>
+				Hey,<br/>
+				<br/>
+				nice article :-) Just a short question: I don't get what you mean with the example 4) -- I cannot really
+				imagine why this should work.<br/>
+				<br/>
+				Greets,<br/>
+				Sebastian
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-08-02 14:12">on August 02, 2010 at 14:12</time>
+			<p>
+				Hi Sebastian,<br/>
+				<br/>
+				thanks for your comments.<br/>
+				<br/>
+				I am not sure which of the notations your refer to in example 4.<br/>
+				I changed the article a bit to make it more clear what my intentions are. Technically all examples
+				should work, since I tested them before posting. Please note that I removed linebreaks in notation D to
+				make clear that any character matters.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Markus Oberndörfer</span>
+			<time class="comment-time" datetime="2010-11-08 16:49">on November 08, 2010 at 16:49</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				regarding example 5. What if you want to access an object storage field inside of your product object.
+				For example your product contains a sub-object productmanager and you want to access the name of this
+				manager.<br/>
+				<br/>
+				field = product.manager.name doesn't seem to work.<br/>
+				<br/>
+				Best regards<br/>
+				Markus
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-11-08 18:07">on November 08, 2010 at 18:07</time>
+			<p>
+				It should correctly read:<br/>
+				field = manager.name<br/>
+				<br/>
+				But this will also not work. I guess there's a limitation in TypoScript getData, which is not able to
+				handle nested objects/arrays in the way you tried to.<br/>
+				<br/>
+				Maybe there's a way to juggle this kind of data. If anyone knows, please post. I'd also be interested.
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author"><a href="http://typo3-lisardo.de" rel="external">Peter</a></span>
+			<time class="comment-time" datetime="2011-02-08 21:53">on February 08, 2011 at 21:53</time>
+			<p>
+				Hi Steffen, <br/>
+				<br/>
+				Number 5 does not work for me, ist only works with some modifications: <br/>
+				<br/>
+				<br/>
+				<br/>
+				lib.productPrice = TEXT<br/>
+				lib.productPrice {<br/>
+				current = 1<br/>
+				required = 1<br/>
+				wrap = Price: |<br/>
+				}<br/>
+				<br/>
+				In my tests this works with subobjects too. <br/>
+
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-02-08 22:14">on February 08, 2011 at 22:14</time>
+			<p>
+				@Peter<br/>
+				<br/>
+				What TYPO3 version did you use for testing example 5? The article bases on TYPO3 4.4. Maybe something
+				changed in 4.5? Could you please test this?
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-08-27 16:40">on August 27, 2012 at 16:40</time>
+			<p>
+				If you need to pass properties from several objects, put them into an array. For example:<br/>
+				<br/>
+				You want to link the product title <em>{product.title}</em> to a certain page. This page is configured
+				on a global scope in TypoScript settings <em>{settings.order.pid}</em>:<br/>
+			<pre><code>## Fluid
+&lt;f:cObject
+  typoscriptObjectPath="lib.product"
+  data="{title: product.title, orderPid: settings.order.pid}"
+/&gt;
+
+## TypoScript
+lib.product = TEXT
+lib.product {
+  field = title
+  wrap = Click to buy our new |
+  typolink.parameter.field = orderPid
+}</code></pre>
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Patrick Schriner</span>
+			<time class="comment-time" datetime="2013-04-22 12:27">on April 22, 2013 at 12:27</time>
+			<p>
+				As nice as it may seem, I ran into memory issues with the cObjectViewhelper on TYPO3 4.5. It did some
+				simple arithmetics, and was called maybe 100x on a page. Transforming into a custom php based viewhelper
+				resolved my issues.
+			</p>
+		</li>
+
+	</ol>
+</section>

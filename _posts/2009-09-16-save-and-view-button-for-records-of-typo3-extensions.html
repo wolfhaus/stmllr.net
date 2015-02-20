@@ -1,0 +1,110 @@
+---
+layout: post
+title: Save-and-view button for records of TYPO3 extensions
+date: 2009-09-16 13:23
+excerpt: When editing a page in the TYPO3 backend, there's a whole bunch of save buttons available. The "save document and view page" button allows to save the content and open a preview popup with one click. Unfortunately this does only work for regular pages and content elements, but not for database records of extensions which are stored inside sysfolders. The following tutorial describes a way to get that button also running for those records.
+tags: 
+  - TYPO3
+  - Usability
+  - Extensions
+  - FE plugin
+  - Hooks
+  - Backend
+---
+
+<section>
+	<p>The solution is to hook into the post-process of saving records in TCEmain and set the GET parameters needed
+	for the preview page. The idea is taken from the <a
+			href="http://typo3.org/extensions/repository/view/tt_news/current/"
+			title="tt_news: The most famous TYPO3 extension" class="external-link">tt_news extension</a>. Thanks to the
+	author <a href="http://www.rupert-germann.de/"
+			  title="Homepage of Rupert Germann, the maintainer of the tt_news extension" class="external-link">Rupert
+		Germann</a>!
+	</p>
+
+	<h3>Hooks in TYPO3</h3>
+
+	<p>Using hooks is a common way to add functionality or change behaviour of the TYPO3 core. Although it sometimes
+		looks like hardcore coding stuff, it's not that hard to understand. The <a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/3/4/"
+				title="Official documentation of TYPO3" class="external-link">TYPO3 Core API documentation</a> on
+		typo3.org gives you an overview about hooks in TYPO3. To get a list of hooks which exist in TYPO3, you can use
+		the extension <a href="http://typo3.org/extensions/repository/view/dmc_hooklist/current/"
+						 title="Extension to list hooks in TYPO3 can be found in the extension repository."
+						 class="external-link">dmc HookList (dmc_hooklist)</a>.
+	</p>
+
+	<h3>Preassumptions</h3>
+
+	<p>This tutorial assumes you have an extension called <i>extExample</i>. <i>extExample</i> is used as the extension
+		key. The extension stores its records in the DB table <i>tx_extExample_data</i>. The records are kept in a
+		sysfolder in the BE. There's a frontend plugin <i>tx_extExample_pi1</i> which displays a single record on a page
+		(page id=123) and using the GET-parameter <i>tx_extExample_pi1[showUid]</i> for the uid of the record. A very
+		common type of frontend extension, isn't it? Just replace the emphasized keywords to use the snippets in your
+		extension.
+	</p>
+
+	<h3>What do you need to do in your own extension to get this button running?</h3>
+
+	<p>There's only three things to do:</p>
+	<ul>
+		<li>add a class to your extension with a method to set the proper preview parameters,</li>
+		<li>register the hook in your extension to tell TYPO3 to call this method,</li>
+		<li>set the page ID of the single view in pageTS.</li>
+	</ul>
+	<h3>Writing a method to set the preview parameters</h3>
+
+	<p>The method adds the needed information to a global variable which itself is processed by TCE when openening the
+		popup window for the preview.
+	</p>
+	<pre><b>typo3conf/ext/extExample/classes/class.tx_extExample_tcemain.php</b><br/>&lt;?php<br/>class tx_extExample_tcemain {<br/><br/>&nbsp; public function processDatamap_preProcessFieldArray(&amp;$fieldArray, $table, $uid, &amp;$pObj) {<br/>&nbsp;<br/>&nbsp;&nbsp; if ($table == 'tx_extExample_data' &amp;&amp; isset($GLOBALS['_POST']['_savedokview_x']) &amp;&amp; !$GLOBALS['BE_USER']-&gt;workspace) {<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // The GETparam which is used in the single view of the plugin<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $getParam = 'tx_extExample_pi1[showUid]';<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // get page TSconfig<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $pageTS = t3lib_BEfunc::getPagesTSconfig($GLOBALS['_POST']['popViewId']);<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // get pid of single view<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $singlePid = $pageTS['tx_extExample.']['singlePid'];<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ($singlePid) {<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // set page id to be shown<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $GLOBALS['_POST']['popViewId'] = $singlePid;<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // don't cache the page<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $GLOBALS['_POST']['popViewId_addParams'] = '&amp;no_cache=1';<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // set language parameter<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if ($fieldArray['sys_language_uid'] &gt; 0) {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $GLOBALS['_POST']['popViewId_addParams'] .= '&amp;L=' . $fieldArray['sys_language_uid'];<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // set plugin GETparams<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $GLOBALS['_POST']['popViewId_addParams'] .= '&amp;' . $getParam . '=' . $uid;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br/>&nbsp;&nbsp;&nbsp; }<br/>&nbsp; }<br/>}<br/><br/>if (defined('TYPO3_MODE') &amp;&amp; $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extExample/classes/class.tx_extExample_tcemain.php']) {<br/>&nbsp; include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/extExample/classes/class.tx_extExample_tcemain.php']);<br/>}<br/><br/>?&gt;</pre>
+	<h3>Registering the hook</h3>
+
+	<p>Hooks are registered in your extension by adding a simple oneliner to ext_localconf.php:
+	</p>
+	<pre><b>ext_localconf.php</b><br/>$GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 'EXT:exampleExt/classes/class.tx_exampleExt_tcemain.php:tx_exampleExt_tcemain';</pre>
+	<h3>Set the singlePid in pageTS</h3>
+
+	<p>Finaly, you need to set the page ID of the frontend single view in pageTS. It's the pid of the page which should
+		be opened in the preview.
+	</p>
+	<pre><b>pageTS (TSconfig)</b><br/>tx_extExample.singlePid = 123</pre>
+	<p>That's it! Now clear the configuration cache in the TYPO3 backend, open a record and try to &quot;save and
+		preview&quot;.
+	</p>
+
+	<p>This solution works only in LIVE workspace. I didn't test it within otther workspaces.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://andreasbecker.de" rel="external">Andreas Becker</a></span>
+			<time class="comment-time" datetime="2010-12-02 14:11">on December 02, 2010 at 14:11</time>
+			<p>
+				Hey, <br/>
+				this is exactly this, what i was searching for.<br/>
+				Also it is described very well.<br/>
+				<br/>
+				Thak you for your help.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Christian Grlica</span>
+			<time class="comment-time" datetime="2011-12-19 18:43">on December 19, 2011 at 18:43</time>
+			<p>
+				Thanks Steffen,<br/>
+				<br/>
+				works charming!<br/>
+				<br/>
+				Happy X-Mas
+			</p>
+		</li>
+
+	</ol>
+</section>

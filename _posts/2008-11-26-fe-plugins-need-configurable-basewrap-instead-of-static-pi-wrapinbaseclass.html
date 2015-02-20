@@ -1,0 +1,103 @@
+---
+layout: post
+title: FE plugins need configurable baseWrap instead of static pi_wrapInBaseClass
+date: 2008-11-26 20:10
+excerpt: The output of most TYPO3 FE plugins are wrapped with a HTML div container by default (so called basewrap). This seems to be fair in most cases, but sometimes it is not and you have to get rid of them. Unfortunately, a lot of extensions including some of the most popular ones don't provide any control to handle this. This article describes how to do it better.
+tags: 
+  - TYPO3
+  - TypoScript
+  - Extension development
+  - FE plugin
+  - baseWrap
+  - stdWrap
+  - tslib_pibase
+---
+
+<section>
+	<h3>Problem</h3>
+
+	<p>The convention to wrap the plugin content with an additional div container is not fair in any case. It should be
+		configurable.
+	</p>
+
+	<p>We usually find the following piece of code at the end of the main() function:
+	</p>
+	<pre> return $this-&gt;pi_wrapInBaseClass($content); </pre>
+	<p>The reason for this might be boilerplate code from the extension kickstarter.
+	</p>
+
+	<h3>Criticism</h3>
+
+	<p>This is not only a lack in usability, but one more violation of the MVC pattern. The method adds additional HTML
+		tags to the content. This should be part of the view and not the controller. One could make the objection that
+		tslib_pibase anyway does not follow the MVC pattern. If so, we still have to face the usability aspect.
+	</p>
+
+	<h3>Solution</h3>
+
+	<p>In TYPO3 the output can be controlled by TypoScript. We should make use of it to provide a baseWrap option making
+		that stuff configurable:
+	</p>
+	<pre>public function main($content, $conf) {<br/>  // (...)<br/> &nbsp;return $this-&gt;baseWrap($content);<br/>}<br/> <br/>protected function baseWrap($content) {<br/>  if (isset($this-&gt;conf['baseWrap.'])) {<br/> &nbsp;&nbsp; return $this-&gt;cObj-&gt;stdWrap($content,$this-&gt;conf['baseWrap.']);<br/> &nbsp;} else {<br/> &nbsp;&nbsp; return $this-&gt;pi_wrapInBaseClass($content);<br/>  }<br/>} </pre>
+	<p>The content gets wrapped with the container by default, so backward compatibility is guaranteed. If user wishes
+		to change that, he could use the stdWrap functions with baseWrap in his TS setup:
+	</p>
+	<pre> plugin.tx_pluginname_pi1 {<br/> &nbsp; # Remove basewrap div container<br/> &nbsp; baseWrap.wrap = |<br/> } </pre>
+	<p>It takes you only a few minutes to do the magic.
+	</p>
+
+	<p>Thanks to <a href="http://buzz.typo3.org/people/francois-suter/" title="Blog of Francois at buzz.typo3.org"
+					class="external-link">Francois Suter</a> for his inspiration.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://blog.rimann.org/" rel="external">Mario Rimann</a></span>
+			<time class="comment-time" datetime="2009-05-20 15:51">on May 20, 2009 at 15:51</time>
+			<p>
+				Thanks for sharing this - helped me today :-)
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://www.t3node.com/" rel="external">Steffen</a></span>
+			<time class="comment-time" datetime="2009-05-20 17:51">on May 20, 2009 at 17:51</time>
+			<p>
+				Mario, maybe you could support <a href="http://bugs.typo3.org/view.php?id=10118">core bug #10118</a>
+				which got stuck in the core list discussion. It's goal is to provide a backward compatible core solution
+				for configurable baseWrap.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Søren Malling</span>
+			<time class="comment-time" datetime="2010-09-15 22:04">on September 15, 2010 at 22:04</time>
+			<p>
+				Could the check and stdWrap part be moved into the original pi_wrapInBaseClass function? In that way,
+				you actually don't need the developers to change there code it becomes a part of the used function.<br/>
+				<br/>
+				And you avoid having this extra function inside your own code
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-09-16 09:01">on September 16, 2010 at 09:01</time>
+			<p>
+				Hi Søren,<br/>
+				<br/>
+				in the beginning of this year I opened a bug for that and wrote a patch: <a
+					title="Bug #10118 in the TYPO3 bug tracker" href="http://bugs.typo3.org/view.php?id=10118">http://bugs.typo3.org/view.php?id=10118</a><br/>
+				<br/>
+				Since then the patch was refactored many times (thanks to Lina, Ingo and Jigal). The patch is is still
+				pending in the core list and needs +1.
+			</p>
+		</li>
+
+	</ol>
+</section>

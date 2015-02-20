@@ -1,0 +1,106 @@
+---
+layout: post
+title: Tiny introduction to heatmaps
+date: 2009-05-29 00:33
+excerpt: Heatmaps can be used for website usage analysis. They appear to be very easy to read and comfortable to understand. But in fact it's not that easy to assure a proper environment and to get reliable results.
+tags: 
+  - Heatmap
+  - Statistics
+  - Eyetracker
+  - Analysis
+  - Usability
+---
+
+
+<section>
+	<p>My TYPO3 agenda today was hit by heatmaps, when a click-heatmap extension was published in TER and a german
+	blog posting about heatmaps was published by <a href="http://typo3blogger.de/heatmap-fur-typo3/"
+													title="Blog posting about heatmaps" class="external-link">Tim
+		Lochmüller</a>. At the time of writing this post I will not refer to the extension as it did not meet my
+	personal quality requirements. Well, so what about heatmaps?
+	</p>
+
+	<h3>What are heatmaps and how are they generated?</h3>
+
+	<p>There are different ways of heatmap data generation. I will explain two of them in context of website usage
+		analysis. The first one is a click-heatmap which tracks the coordinates of all mouse clicks users perform on a
+		website. The second one is an eyetracking-heatmap, which tracks the eye movement of a user when he looks at a
+		website. Both methods use colorization to visualize those areas where user clicked or looked at. The more clicks
+		an area has or the more time was spend for watching an area, the more reddish the area is colorized. The
+		visualization follows assumptions of the <a
+				href="http://en.wikipedia.org/wiki/Color_theory#Warm_vs._cool_colors"
+				title="Wikipedai article about color temperature in color theory" class="external-link">color theory</a>,
+		which associate red colors more hot than blue ones. So hot areas on heatmaps reveal more user attention than
+		cold ones.
+	</p>
+
+	<p><img alt="Image of a Heatmap" title="Image by Jason Morrison http://www.flickr.com/photos/jason-morrison/"
+			src="/files/images/heatmap2.jpg" width="255" height="220"/>
+	</p>
+
+	<h3>Click-heatmap usecase</h3>
+
+	<p>A click-heatmap gives an impression about the regions of a website users click - no matter if there's anything to
+		click or not. Heatmaps therefore are very useful to identify usability flaws. They reveal those parts of a
+		website, where users expect something to click, but in fact nothing exists to click. A popular example are those
+		huge logo images at the top of a website, where you could expect a link to the root page. In fact you often
+		click in vain.
+	</p>
+
+	<h3>Eyetracking-heatmap usecase</h3>
+
+	<p>Heatmaps also can be used to describe users' eye movement and favorite coordinates on a website. Jakob Nielson
+		demonstrated this by creating heatmaps which proof the so called <a
+				href="http://www.useit.com/alertbox/reading_pattern.html"
+				title="Blog posting about a survey of Jakob Nielson which describes the F-Pattern"
+				class="external-link">F-pattern</a>. He describes the F-Pattern as a dominant scheme how users track a
+		website. His heatmaps revealed a F-shaped area, where users looked most frequently at.
+	</p>
+
+	<p><img alt="Heatmap on google search results" title="Image by labnol: http://www.flickr.com/photos/amit-agarwal/"
+			src="/files/images/heatmap.jpg" width="330" height="273"/>
+	</p>
+
+	<p>The image shows an F-Pattern heatmap on a google search result page.
+	</p>
+
+	<h3>Why not simply install a heatmap software to find out what users behave like...</h3>
+
+	<p>You need to be sceptical about the obvious nature of a visual representation like a heatmap:</p>
+	<ul>
+		<li>In the wild, websites users have different tools and interfaces which render your wesbite differently.
+			Screen resolutions or size and browser rendering can vary and bias the results of a heatmap survey. The more
+			diverse user environments are, the more bias your results will have. And in most cases it is hard to
+			estimate the bias.
+		</li>
+		<li>Content changes, especially on dynamic root pages with latest news. The quality of heatmap results declines
+			the more frequent content changes or the longer a survey takes on a dynamic website.
+		</li>
+	</ul>
+	<h3>Conclusion</h3>
+
+	<p>A heatmap is a handy tool to visualize website usage. It's results are real eyecatcher. The reliability of the
+		results can suffer very much if you are not in full control of the users environment. The perfect usecase would
+		be a website usability pretest with controlled laboratory conditions. Heatmaps are no substitution to visitor or
+		website traffic statistics, but can cast light on some hidden aspects.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-10-05 18:30">on October 05, 2009 at 18:30</time>
+			<p>
+				There has been a new release of a click-heatmap extension which looks promising. It's called <a
+					href="http://typo3.org/extensions/repository/view/heatmap_pro/current/" title="">Heatmap for
+				Websites (heatmap_pro)</a> and integrates the GPL software <a
+					href="http://www.labsmedia.com/clickheat/index.html">ClickHeat</a>.
+			</p>
+		</li>
+
+	</ol>
+</section>

@@ -1,0 +1,236 @@
+---
+layout: post
+title: Hiding repeated segments with RealURL
+date: 2011-07-30 13:24
+excerpt: This article demonstrates how to remove parts of an URL in TYPO3 using RealURL. Especially the excessive use of getParams of Extbase plugins results in superfluous repeated parts in URLs. Guest author Tomaž Zaman will show you how to tackle that problem.
+tags: 
+  - TYPO3
+  - RealURL
+  - Extbase
+  - SEO
+  - URL
+  - Guest author
+---
+
+<section>
+	<div>
+		<div></div>
+		<div></div>
+		<div><p>By now, everyone has probably heard of building extensions the 'new' way, with extbase and fluid.&nbsp;Numerous
+			extensions build with those are poping up daily in the TER.&nbsp;</p></div>
+		<div></div>
+		<div><p>The only minor drawback (as I see it) is their URL generation, because URLs tend to fill up pretty much
+			the whole width of the address bar in your browser (context, controller, action, cHash), which looks quite
+			ugly - probably not the best solution from SEO perspective either.</p></div>
+		<div></div>
+		<div><p><a href="http://typo3.org/extensions/repository/view/realurl/current/"
+				   title="RealURL extension in TER on typo3.org" class="external-link">RealURL</a> can be a great
+			solution to this problem, but needs a bit of customizing, to get the optimal results. The extension I'll use
+			to demonstrate this solution is called <a href="http://typo3.org/extensions/repository/view/yag/current/"
+													  title="YAG Extension in TER on typo3.org" class="external-link">'YAG'
+				(Yet another gallery) by Daniel Lienert and Michael Knoll</a> (thanx, guys!). It's worth noting, that
+			the extension already includes some RealURL configuration functionality, but still lacks the final touch.
+		</p></div>
+		<div></div>
+		<div><p>I've added the following snippet to my realurl_conf.php:</p></div>
+	</div>
+	<div>
+		<pre>'postVarSets' =&gt; array(<br/>&nbsp; &nbsp; '_DEFAULT' =&gt; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; 'album' =&gt; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'GETvar' =&gt; 'tx_yag_pi1[controller]',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ),<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'GETvar' =&gt; 'tx_yag_pi1[action]',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ),<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'GETvar' =&gt; 'tx_yag_pi1[context43][albumUid]',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'lookUpTable' =&gt; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'table' =&gt; 'tx_yag_domain_model_album',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'id_field' =&gt; 'uid',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'alias_field' =&gt; 'name',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'addWhereClause' =&gt; ' AND deleted !=1 AND hidden !=1',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'useUniqueCache' =&gt; 1,<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'useUniqueCache_conf' =&gt; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'strtolower' =&gt; 1,<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'spaceCharacter' =&gt; '-',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; )<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; )<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ),<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; array(<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 'GETvar' =&gt; 'cHash',<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ),<br/>&nbsp; &nbsp; &nbsp; &nbsp; )<br/>&nbsp; &nbsp; ),<br/>), </pre>
+	</div>
+	<div></div>
+	<div><p>This produced the following result (on the single album view):
+	</p>
+		<pre>http ://example.com/album/ItemList/submitFilter/my-album-title/cHash/</pre>
+	</div>
+	<div><p>Much better since the original output, but still had two unnecessary segments: ItemList and submitFilter.
+		Not only are those not needed in my case (they were always the same), they don't 'fit' in my URLs where pretty
+		much all other segments are always in Slovene.</p></div>
+	<div></div>
+	<div><p>After going through the code of the provided hooks (by YAG), I decided to write my own, which turned out to
+		be much easier and faster way than I first thought it would be. First, the hooks (also in realurl_conf.php):</p>
+	</div>
+	<div></div>
+	<div>
+		<pre>function user_encodeSpURL_postProc(&amp;$params, &amp;$ref) {<br/>&nbsp; &nbsp; $params['URL'] = str_replace('album/ItemList/submitFilter/', 'album/', $params['URL']);<br/>}<br/>function user_decodeSpURL_preProc(&amp;$params, &amp;$ref) {<br/>&nbsp; &nbsp; $params['URL'] = str_replace('album/', 'album/ItemList/submitFilter/', $params['URL']);</pre>
+	</div>
+	<div><p>No rocket science here, I simply replaced the longer version of the URL with shortened one. I kept the word
+		album in both functions, so I know what function does and I don't mistakenly rewrite some other URLs.</p></div>
+	<div><p>(In case you don't know, two functions are used because one is used for generating the URLs and the second
+		one 'translates' the URL back to GET vars for TYPO3)</p></div>
+	<div></div>
+	<div><p>All we're left now is calling those two hooks from inside the RealURL configuration:</p></div>
+	<div></div>
+	<div>
+		<pre>$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['realurl'] = array(<br/>&nbsp; &nbsp; 'encodeSpURL_postProc' =&gt; array('user_encodeSpURL_postProc'),<br/>&nbsp; &nbsp; 'decodeSpURL_preProc' =&gt; array('user_decodeSpURL_preProc'),<br/>&nbsp; &nbsp; '_DEFAULT' =&gt; array(<br/><span
+				style="white-space:pre">	</span>// the rest of your configuration</pre>
+	</div>
+	<div><p>And voila! My URLs look like this now:</p>
+
+		<div>
+			<pre>http ://example.com/album/my-album-title/cHash/</pre>
+			<p>which I like much better and I think google crawler will agree with me.</p></div>
+	</div>
+	<div><p>&nbsp;</p>
+
+		<h3>About the author<span class="Apple-style-span" style="font-size: 12px; font-weight: normal; ">&nbsp;</span>
+		</h3>
+
+		<p><img src="/files/images/tomaz-zaman.jpg" width="137" height="160" title="Tomaz Zaman" alt=""/></p>
+
+		<p><a href="http://optiss.si" title="Slovenian TYPO3 Freelancer" class="external-link-new-window">Tomaž
+			Zaman</a> is a Slovenian freelancer with more than 7 years of experience with TYPO3. He has made numerous
+			websites, from small 4-page portfolios, to educational, government and corporate websites and intranets for
+			clients from all across Europe. Since 2011&nbsp;he is a certified TYPO3 integrator.<br/><br/>OPTISS<br/>@:
+			<a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#116;&#111;&#109;&#97;&#122;&#64;&#111;&#112;&#116;&#105;&#115;&#115;&#46;&#115;&#105;">tomaz&#64;optiss.si</a><br/>W:
+			<a href="http://optiss.si" title="Optiss Tomaž Zaman" class="external-link">http://optiss.si</a><br/>T: +386
+			30 651 645</p>
+
+		<div></div>
+	</div>
+	<div></div>
+</section>
+
+
+{% include post-taglist.html %}
+
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://typo3blogger.de" rel="external">Tim</a></span>
+			<time class="comment-time" datetime="2011-07-30 14:40">on July 30, 2011 at 14:40</time>
+			<p>
+				Nice Idea... to improve the code. Don't use cHash as postVarSets and enable the RealURL cHash cache.
+				Then the cHash will disapear if there are no "normal" get vars...
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://optiss.si" rel="external">Tomaž</a></span>
+			<time class="comment-time" datetime="2011-07-30 17:32">on July 30, 2011 at 17:32</time>
+			<p>
+				Tim, thank you for the tip!
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author"><a href="http://www.fabrizio-branca.de" rel="external">Fabrizio
+				Branca</a></span>
+			<time class="comment-time" datetime="2011-08-11 10:15">on August 11, 2011 at 10:15</time>
+			<p>
+				Hi Tomaž,<br/>
+				<br/>
+				nice solution! Thanks a lot for sharing! <br/>
+				<br/>
+				Bye, and have a nice day,<br/>
+				<br/>
+				Fabrizio :)
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author"><a href="http://rheinschafe.de" rel="external">Mathias Schopmans</a></span>
+			<time class="comment-time" datetime="2011-08-25 16:29">on August 25, 2011 at 16:29</time>
+			<p>
+				It's much simpler to put the unwanted vars in preVars and set noMatch to bypass.<br/>
+				<br/>
+				Example: hide tt_products[backPID] and tt_products[cat]<br/>
+				<br/>
+				'preVars' => array (<br/>
+				&nbsp;&nbsp;array (<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'GETvar' => 'L',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'valueMap' => array (<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'en' => '0',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'de' => '1',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'fr' => '2',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;),<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'noMatch' => 'bypass',<br/>
+				&nbsp;&nbsp;),<br/>
+				<br/>
+				&nbsp;&nbsp;array(<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'GETvar' => 'tt_products[backPID]',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'noMatch' => 'bypass',<br/>
+				&nbsp;&nbsp;),<br/>
+				&nbsp;&nbsp;array(<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'GETvar' => 'tt_products[cat]',<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'noMatch' => 'bypass',<br/>
+				&nbsp;&nbsp;),<br/>
+				),
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Andrea</span>
+			<time class="comment-time" datetime="2011-09-16 11:57">on September 16, 2011 at 11:57</time>
+			<p>
+				Hi,<br/>
+				thanks for this,<br/>
+				but i still have problems with realurl for tt_products.<br/>
+				The parameter in detailview is allways like below, but I like to have the product title instead. Has
+				anyone a solution.<br/>
+				<br/>
+				This is shown:<br/>
+				example.com/details/?tt_products[product]=1367&cHash=e6b7c6f71db72fd632d229d1e19c8fdf<br/>
+				<br/>
+				I want something like this:<br/>
+				<br/>
+				example.com/details/fantasticbike.html<br/>
+				<br/>
+				Best,<br/>
+				<br/>
+				Andrea<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Hauke</span>
+			<time class="comment-time" datetime="2011-11-12 15:48">on November 12, 2011 at 15:48</time>
+			<p>
+				There is a new functionality in 1.4 to skip default arguments if the argument is the default:<br/>
+				http://forge.typo3.org/projects/typo3v4-mvc/wiki/Skip_default_arguments_in_URIs
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Klaus</span>
+			<time class="comment-time" datetime="2011-12-02 12:20">on December 02, 2011 at 12:20</time>
+			<p>
+				I agree with Mathias Schopmans. I tried to use the functions, but I wouldnt work. Using the "preVars"
+				and setting "bypass" is a lot easier.
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Klaus</span>
+			<time class="comment-time" datetime="2011-12-02 12:38">on December 02, 2011 at 12:38</time>
+			<p>
+				Sorry. My last post was bullsh**. If you use the bypass and the preVars, then YAG does not work anymore.
+				I should have tried it before writing a post...
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">Mike</span>
+			<time class="comment-time" datetime="2012-08-29 11:05">on August 29, 2012 at 11:05</time>
+			<p>
+				Hi,<br/>
+				Thanks for this. Very helpful
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author"><a href="http://www.fiedomedia.de" rel="external">Patrick</a></span>
+			<time class="comment-time" datetime="2012-12-11 10:35">on December 11, 2012 at 10:35</time>
+			<p>
+				Hey Tomaž, <br/>
+				<br/>
+				thanks for sharing this great code with us all!<br/>
+				<br/>
+				Regards, Patrick
+			</p>
+		</li>
+
+	</ol>
+</section>

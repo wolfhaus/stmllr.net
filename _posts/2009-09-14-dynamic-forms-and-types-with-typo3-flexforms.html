@@ -1,0 +1,132 @@
+---
+layout: post
+title: Dynamic forms and types with TYPO3 FlexForms
+date: 2009-09-14 19:53
+excerpt: The most accessible way to configure a plugin in TYPO3 is using a custom content element build with FlexForms. It provides forms of all kinds for any BE user. FlexForms adapt most of the features of the TCA, but unfortunately the documentation on FlexForms is rather poor. The following article tries to demonstrate the configuration of a TYPO3 FlexForm in order to get some forms which dynamically change their fields on user interaction.
+tags: 
+  - TYPO3
+  - FlexForms
+  - FE Plugin
+  - Extensions
+  - Extension development
+  - Forms
+  - Dynamic Forms
+---
+<section>
+	<h3> Dynamic forms and types of forms</h3>
+
+	<p>To get an idea what this article is exactly about, go login to a TYPO3 backend, open a content element of type
+		&quot;Text&quot; and change its type to &quot;Image&quot;. The form of the content element will reload with some
+		new fields appearing and others disappearing.
+	</p>
+
+	<p><img title="Ugly looking sceenshots " alt="Ugly looking example forms"
+			src="/files/images/RTEmagicC_ce-types.jpg.jpg" height="817" width="285"/>
+	</p>
+
+	<p>This is what I call here dynamic forms. A single content element can be used for different tasks using different
+		form fields. Each form type contains an individual set of fields.
+	</p>
+
+	<h3>TCA configuration to get dynamic forms</h3>
+
+	<p>In TCA, the above example is achieved by two settings:</p>
+	<ul>
+		<li>reloading the form after changing the &quot;type&quot; field (dynamic form)</li>
+		<li>configuring the field sets for each type (types).</li>
+	</ul>
+	<p>The first setting is configured in TCA['ctrl']['type'] section by setting a certain table field to act as a form
+		type switcher. In tt_content for example it look like this:
+	</p>
+	<pre><b>TCA</b><br/>'ctrl' =&gt; array(<br/>&nbsp;&nbsp; &nbsp;'type' =&gt; 'CType',<br/>),</pre>
+	<p>The second setting is arranged in TCA['ctrl']['types'] section by setting all individual fields for any type of
+		form. For example:
+	</p>
+	<pre><b>TCA</b><br/>'types' =&gt; array(<br/>&nbsp;&nbsp; &nbsp;'1' =&gt; array(<br/>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;'showitem' =&gt; 'CType, header, bodytext'<br/>&nbsp;&nbsp; &nbsp;),<br/>&nbsp;&nbsp; &nbsp;'2' =&gt; array(<br/>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;'showitem' =&gt; 'CType, header, image'<br/>&nbsp;&nbsp; &nbsp;),<br/>),</pre>
+	<p>In the above example we get a form with two types. One type is showing the type, a header and a text field, the
+		other shows an image field instead of the text field. The field CType is used to switch between the types.
+	</p>
+
+	<h3>FlexForms configuration to get dynamic forms</h3>
+
+	<p>In FlexForms we have to use a slightly different approach:</p>
+	<ul>
+		<li>using &lt;onChange&gt;reload&lt;/onChange&gt; instead of TCA[ctrl']['type'] to reload forms after changing
+			the type field (onChange)
+		</li>
+		<li>adding a condition to all FlexForm fields which expects a certain value of the type field.
+			(displayCondition)
+		</li>
+	</ul>
+	<p>Our example form would look like this:
+	</p>
+	<pre><b>FlexForm</b><br/>&lt;myType&gt;<br/>&nbsp; &lt;TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;label&gt;Type of form&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;onChange&gt;reload&lt;/onChange&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;config&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;type&gt;select&lt;/type&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;size&gt;1&lt;/size&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;maxitems&gt;1&lt;/maxitems&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;items&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;0&quot; type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;0&quot;&gt;&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot;&gt;0&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot; type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;0&quot;&gt;Type No. 1 for texts&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot;&gt;text&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;2&quot; type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;0&quot;&gt;Type No. 2 for images&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot;&gt;image&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/items&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/config&gt;<br/>&nbsp; &lt;/TCEforms&gt;<br/>&lt;/myType&gt;<br/>&lt;bodytext&gt;<br/>&nbsp; &lt;TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;label&gt;Your Text&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;displayCond&gt;FIELD:myType:=:text&lt;/displayCond&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;config&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;type&gt;input&lt;/type&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/config&gt;<br/>&nbsp; &lt;/TCEforms&gt;<br/>&lt;/bodytext&gt;<br/>&lt;image&gt;<br/>&nbsp; &lt;TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;label&gt;Your Image&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;displayCond&gt;FIELD:myType:=:image&lt;/displayCond&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;config&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;type&gt;input&lt;/type&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/config&gt;<br/>&nbsp; &lt;/TCEforms&gt;<br/>&lt;/image&gt;</pre>
+	<h3>Explanation of the FlexForm displayCond feature</h3>
+
+	<p>The displayCond feature is explained in the<a
+			href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/4/2/#id4256737"
+			title="Official TYPO3 core API documentation on typo3.org" class="external-link"> ['columns'][fieldname]
+		section of the TYPO3 core API documentation</a>.
+	</p>
+
+	<p>In our case we use FIELD:myType:IN:value where value is a certain value of the type field (text or image):
+	</p>
+	<pre>FIELD:myType:=:<i>text</i></pre>
+	<p>The field text is displayed only if the field myType is set to the value &quot;text&quot;.
+	</p>
+
+	<h3>Update 2013/03/31: Multiple nested conditions possible with TYPO3 &gt;= 6.1</h3>
+
+	<p>In TYPO3 6.1 and above, it is possible to have multiple nested conditions with AND and OR. --&gt; see the related
+		bug report in the <a href="http://forge.typo3.org/issues/18211"
+							 title="Array of display conditions for TCA fields instead of 1 string"
+							 class="external-link">TYPO3 issue tracker</a>. Here are two examples:
+	</p>
+
+	<p>In the first example, the condition is met, when the field &quot;type&quot; either has the value &quot;image&quot;
+		or &quot;imgtext&quot;:
+	</p>
+	<pre>&lt;displayCond&gt;<br/>&nbsp; &lt;OR&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot;&gt;FIELD:type:=:image&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;numIndex index=&quot;1&quot;&gt;FIELD:type:=:imgtext&lt;/numIndex&gt;<br/>&nbsp; &lt;/OR&gt;<br/>&lt;/displayCond&gt;</pre>
+	<p>In the next example, the condition is met, when the field &quot;layout&quot; is greater than 0 and the field
+		&quot;type&quot; either has the value &quot;image&quot; or &quot;imgtext&quot;:
+	</p>
+	<pre>&lt;displayCond&gt;<br/>&nbsp; &lt;AND&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;numIndex&gt;FIELD:layout:&gt;:0&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;OR&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex&gt;FIELD:type:=:image&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;numIndex&gt;FIELD:type:=:imgtext&lt;/numIndex&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/OR&gt;<br/>&nbsp; &lt;/AND&gt;<br/>&lt;/displayCond&gt;</pre>
+	<h3>FlexForms documentation unleashed?</h3>
+
+	<p>FlexForms are almost as powerful as regular TCA forms. The configuration of FlexForms is slightly different than
+		TCA: Most of the features use equivalent syntax, some have their own. Unfortunately, the documenation of
+		FlexForms in most cases refers to TCA, instead of being discussed in a separate chapter - resulting in very few
+		FlexForm examples.
+	</p>
+
+	<p>You need to pass the 36 chambers of TCA to reveal the secret knowledge of FlexForms. Have patience and come up
+		with some good keywords when search the mailing lists and forums for FlexForms examples.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-05-17 12:52">on May 17, 2011 at 12:52</time>
+			<p>
+				<del>Unfortunately it seems to be impossilbe to have more than one condition inside displayCond</del>
+				. 2013/03/31: More than one condition inside displayCond is now possible:<br/>
+				<br/>
+				<a href="http://forge.typo3.org/issues/18211">http://forge.typo3.org/issues/18211</a>
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">David</span>
+			<time class="comment-time" datetime="2013-03-14 11:46">on March 14, 2013 at 11:46</time>
+			<p>
+				Thank You so much for sharing very useful information
+			</p>
+		</li>
+
+	</ol>
+</section>

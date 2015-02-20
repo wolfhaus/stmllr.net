@@ -1,0 +1,73 @@
+---
+layout: post
+title: Is SQL injection possible in TypoScript objects?
+date: 2009-03-05 13:24
+excerpt: Using GET/POST vars in SQL queries involves the risk of SQL injection if the parameter is not properly sanitized. There are lots of warnings and documents around in the web on how to prevent this in PHP scripts. But what about TypoScript?
+tags: 
+  - TYPO3
+  - TypoScript
+  - Security
+  - SQL injection
+  - stdWrap
+  - cObject
+---
+
+<section>
+	<p>The <a href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/8/#id4251042"
+			  title="The CONTENT object section TSref" class="external-link">TypoScript object CONTENT</a> allows you to
+		build SQL queries without the use of PHP. Have a look at the following (nonsense) example:
+	</p>
+	<pre>page = PAGE<br/>page.10 = CONTENT<br/>page.10 {<br/>&nbsp; table = tt_content<br/>&nbsp; select {<br/>&nbsp;&nbsp;&nbsp; pidInList = 123<br/>&nbsp;&nbsp;&nbsp; where = deleted=0<br/>&nbsp;&nbsp;&nbsp; andWhere.data = GP:my_test|uid<br/>&nbsp;&nbsp;&nbsp; andWhere.wrap = uid=|<br/>&nbsp; }<br/>}</pre>
+	<p>The content of page.10 is a content element of page 123. To choose a certain content element, you can use a
+		GET/POST parameter as the uid.
+	</p>
+
+	<h3>See it working</h3>
+
+	<p>To see the example working, add some content elements to a page. We use page 123 in this example. Then note the
+		uid of one of these content elements. In the example we use 42. Go to the frontend page in your browser and
+		query the page:
+	</p>
+	<pre>http: //yourdomain.tld/index.php?id=123&amp;my_test[uid]=<i>42</i></pre>
+	<p>This will output the content element with uid 42 on any page.
+	</p>
+
+	<h3>See the SQL injection working</h3>
+
+	<p>What's the matter with this? The GET variable <i>my_test[uid]</i> is used inside a SQL query without being
+		sanitized, open for SQL injection! Just try this URL:
+	</p>
+	<pre>http: //yourdomain.tld/index.php?id=123&amp;my_test[uid]=<i>42 OR 1=1</i></pre>
+	<p>You should now see ALL content elements of your website. This is because <i>OR 1=1</i> is injected and processed
+		in the SQL WHERE clause.
+	</p>
+
+	<h3>How to prevent this?</h3>
+
+	<p>The GP parameter <i>my_test[uid]</i> should only accept integer values. In PHP one could use the <a
+			href="http://www.php.net/intval" title="intval() function reference on www.php.net" class="external-link">function
+		intval()</a> to make sure the given value gets converted to type integer. Luckily, there is an equialent in
+		TypoScript for that. select.andWhere has <a
+				href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/5/#id4149585"
+				title="stdWrap section in TSref" class="external-link">stdWrap properties</a>, so we can use the intval
+		property inside andWhere. The above TypoScript snippet would then look like this:
+	</p>
+	<pre>page = PAGE<br/>page.10 = CONTENT<br/>page.10 {<br/>&nbsp; table = tt_content<br/>&nbsp; select {<br/>&nbsp;&nbsp;&nbsp; pidInList = 123<br/>&nbsp;&nbsp;&nbsp; where = deleted=0<br/>&nbsp;&nbsp;&nbsp; andWhere.data = GP:my_test|uid<br/>&nbsp;&nbsp;&nbsp; andWhere.wrap = uid=|<br/>&nbsp;&nbsp;&nbsp; <b>andWhere.intval
+		= 1</b><br/> &nbsp; }<br/>}</pre>
+	<p>Be careful, whenever you create SQL queries which processes GET/POST parameters. Using TypoScript solely does not
+		avoid the danger of SQL injection.
+	</p>
+</section>
+
+<section>
+	<h3>Related articles</h3>
+	<ul>
+		<li><a href="/blog/2009-11-30-prevent-sql-injection-in-typoscript-when-using-strings-from-get-parameters.html">Prevent
+			SQL injection in TypoScript when using strings from GET parameters</a> (
+			<time>November 30, 2009</time>
+			)
+		</li>
+	</ul>
+</section>
+
+{% include post-taglist.html %}

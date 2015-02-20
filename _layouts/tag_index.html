@@ -1,0 +1,23 @@
+---
+layout: tags
+---
+
+<h2>{{ page.title }}</h2>
+
+<ul class="post-list">
+	{% for post in site.posts %}
+		{% for tag in post.tags %}
+			{% if tag == page.tag %}
+				<li>
+					<h3>
+						<a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+					</h3>
+					<time class="meta" datetime="{{ post.date | date: '%Y-%m-%d %H:%M' }}">
+						{{ post.date | date: "%b %-d, %Y" }}
+					</time>
+					{{ post.excerpt }}
+				</li>
+			{% endif %}
+		{% endfor %}
+	{% endfor %}
+</ul>

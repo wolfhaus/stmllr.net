@@ -1,0 +1,151 @@
+---
+layout: post
+title: Clearing TYPO3 Cache in PhpStorm
+date: 2012-07-26 21:07
+excerpt: Developing and Testing TYPO3 websites might force you to clear TYPO3 caches whenever you made a change. Especially if you write Extbase/Fluid extensions on TYPO3 4.5, you need to clear reflection/object cache when altering a class file. This task can be solved automatically by your IDE! This articles describes how to do that with PhpStorm 4.
+
+tags: 
+  - TYPO3
+  - Caching
+  - PhpStorm
+  - Extension Development
+  - Productivity
+---
+
+<section>
+	<h3>Overview</h3>
+
+	<p>Clicking on TYPO3 clear cache buttons is tiring while development and sucks if you need to switch between TYPO3
+		backend, frontend and your IDE over and over again.
+	</p>
+
+	<p>To stop that madness, you basically need...</p>
+	<ul>
+		<li>to install the TYPO3 Extension cleartypo3cache</li>
+		<li>to create a tool and a keyboard shortcut in PhpStorm 4 to trigger cleartypo3cache</li>
+		<li>SSH access with passwordless pubkey authentication when pushing to a remote host.</li>
+	</ul>
+	<h3>TYPO3</h3>
+
+	<p>Install Extension &quot;cleartypo3cache&quot; and create the BE user &quot;_cli_cleartypo3cache&quot; and add the
+		following TSconfig:
+	</p>
+	<pre>options.clearCache.all=1<br/>options.clearCache.pages=1</pre>
+	<p>Now test if cache is cleared:
+	</p>
+	<pre>$ cd /path/tp/typo3-site/<br/>$ php typo3/cli_dispatch.phpsh cleartypo3cache all</pre>
+	<h3>Shell script wrapper for remote hosts</h3>
+
+	<p>If your webserver is on localhost, you are lucky because you don't need this shell script. You can skip to the
+		next chapter.
+	</p>
+
+	<p>If your webserver is on a remote host, you need an additional wrapper script. This is because PhpStorm does not
+		provide an environment variable for the remote host directory. You have to set this directory statically for
+		each project in the wrapper script:
+	</p>
+	<pre>#!/bin/sh<br/><br/>TYPO3_SITE_PATH=&quot;/path/to/typo3-site&quot;<br/>USER=&quot;alice&quot;<br/>HOST=&quot;example.com&quot;<br/><br/>/usr/bin/ssh $USER@$HOST '/usr/bin/php $TYPO3_SITE_PATH/typo3/cli_dispatch.phpsh cleartypo3cache all'</pre>
+	<p>Save this file in your project file directory into .idea/clear-typo3-cache.sh and make it executable:
+	</p>
+	<pre>$ chmod 755 .idea/clear-typo3-cache.sh</pre>
+	<h3>PhpStorm External Tools</h3>
+
+	<p>You need to create an &quot;external tool&quot; in PhpStorm to be able to clear cache.</p>
+	<ul>
+		<li>Go to PhpStorm--&gt;Settings--&gt;External Tools--&gt;Add...</li>
+		<li>Give your tool a name and a group, e.g. &quot;Deployment&quot; -&gt; &quot;Clear TYPO3 Cache&quot;</li>
+		<li>Deactivate checkbox &quot;Open Console&quot; and &quot;Menu-&gt;Search Results&quot;</li>
+	</ul>
+	<h4>Remote host scenario</h4>
+
+	<p>Add the following line to &quot;Programm:&quot;
+	</p>
+	<pre>$ProjectFileDir$/.idea/clear-typo3-cache.sh</pre>
+	<h4>Localhost scenario</h4>
+
+	<p>Add this line to &quot;Program:&quot;
+	</p>
+	<pre>$PhpExecutable$</pre>
+	<p>Add this line to &quot;Parameters:&quot;
+	</p>
+	<pre>$ProjectFileDir$/typo3/cli_dispatch.phpsh cleartypo3cache all</pre>
+	<p>You need to have a PHP interpreter configured in PhpStorm--&gt;Settings--&gt;PHP to use $PhpExecutable$.
+		Alternatively you can use /usr/bin/php
+	</p>
+
+	<p><img title="Creating External Tools in PhpStorm" src="/files/images/phpstorm-external-tools-typo3-cache.png"
+			height="423" width="590" alt=""/>
+	</p>
+
+	<h3>PhpStorm Keymap</h3>
+
+	<p>I suggest to use the same key binding as you use for saving or remote host uploading:
+	</p>
+
+	<p>Go to PhpStorm--&gt;Settings--&gt;Keymap
+	</p>
+
+	<p>&nbsp;For remote host scenario, navigate to: Main menu--&gt;Tools--&gt;Deployment--&gt;Upload to Default Server.
+		Notice the existing shortcut. If you don't have one for that, create a new one (I use ALT+SHIFT+U)<br/>For the
+		localhost scenario, just use Ctrl+S (Main menu--&gt;File--&gt;Save All).</p>
+	<ul>
+		<li>Now navigate to the External Tool you have created (e.g. External Tools--&gt;Deployment-&gt;Clear TYPO3
+			Cache)
+		</li>
+		<li>Right click &quot;Add Keyboard Shortcut&quot;</li>
+		<li>Create the particular shortcut in &quot;First Stroke&quot;</li>
+	</ul>
+	<p>Now PhpStorm will warn you that the shortcut is already in use for a different command. That's fine, it's exactly
+		what we want to have.
+	</p>
+
+	<p>That's it. Your TYPO3 caches are always cleared when you hit <i>save</i> or <i>upload</i> on your keyboard.</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Philipp Gampe</span>
+			<time class="comment-time" datetime="2012-07-27 15:17">on July 27, 2012 at 15:17</time>
+			<p>
+				This extension does not work at all with 6.0.<br/>
+				<br/>
+				It uses ``$TYPO3_CONF_VARS`` instead of ``$GLOBALS['TYPO3_CONF_VARS']`` and also removes the extension
+				key by calling ``global $_EXTKEY``.<br/>
+				<br/>
+				The whole cli code fails for 6.0 because it looks like it does not use the CLI like it should.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-07-27 15:36">on July 27, 2012 at 15:36</time>
+			<p>
+				Thanks for your Feedback, Philipp.<br/>
+				I didn't test on 6.0, since it's in a alpha state ATM. Unfortunately there's no issue tracker for the
+				extension. I will ask the author to add one at http://forge.typo3.org/projects/extension-cleartypo3cache
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-07-30 16:06">on July 30, 2012 at 16:06</time>
+			<p>
+				6.0 compatibility issue can be found: <a href="http://forge.typo3.org/issues/39386">http://forge.typo3.org/issues/39386</a>
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author"><a href="http://goo.gl/UE0ga" rel="external">Armin</a></span>
+			<time class="comment-time" datetime="2013-02-20 18:18">on February 20, 2013 at 18:18</time>
+			<p>
+				Have a look on this Google Chrome extension to clear the cache of TYPO3 right out of the browser,
+				without switching to backend: http://goo.gl/UE0ga
+			</p>
+		</li>
+
+	</ol>
+</section>

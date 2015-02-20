@@ -1,0 +1,53 @@
+---
+layout: post
+title: How to create a page browser in TYPO3 extensions?
+date: 2009-02-03 23:30
+excerpt: Hugh data listings can be confusing and hard to understand. That applies to search results as well as news collections, members directory or todo lists. Page browser divide listings into several parts, which make it much easier to keep track of the data. The following article describes and compares two approaches to integrate a page browser in TYPO3 extensions.
+tags: 
+  - TYPO3
+  - Extension development
+  - Extensions
+  - FE plugin
+  - Page browser
+  - tslib_pibase
+---
+
+<section>
+	<h3>Function tslib_pibase::pi_list_browseresults()</h3>
+
+	<p>For a considerable time, TYPO3 ships an out-of-the-box function to add a page browser to your plugin. The
+		function <a
+				href="http://www.typo3-unleashed.net/typo3apidocs/typo3api_4.2.5/html/df/d32/classtslib__pibase.html#7a2b0e2292b0bfbd3b950df24ffc94ff"
+				title="Reference of the function kindly provided by Thomas Hempel" class="external-link">pi_list_browseresults</a>
+		is part of the cObject and is called by:
+	</p>
+	<pre>$content .= $this-&gt;pi_list_browseresults(<br/>   $showResultCount=1,<br/>   $tableParams='',<br/>   $wrapArr=array(),<br/>   $pointerName='pointer',<br/>   $hscText=TRUE<br/>);</pre>
+	<p>Unfortunately the output of the function is a HTML table which is semantically not a proper form for a page
+		browser. The configuration misses the power of common templating, although you could serve most needs with
+		TypoScript wraps. To find out how to implement pi_list_browseresults, you'll either have to dig into some 3rd
+		party extensions or search the archives for comments. Therefore we leave this function as is and turn to another
+		approach.
+	</p>
+
+	<h3>Extension &quot;Universal page browser&quot; (pagebrowse)</h3>
+
+	<p>The <a href="http://typo3.org/extensions/repository/view/pagebrowse/current/" title="Extension overview in TER"
+			  class="external-link-new-window">Universal page browser</a> extension from TER is meant to be used inside
+		your plugin as a powerful alternative to pi_list_browseresults. The styling of the page browser is done by HTML
+		templating and is controlled by TypoScript setup. It can be used inside any extension by integrating it as a
+		USER or USER_INT cObject. (Details on how to do that are perfectly explained in one of <a
+				href="http://typo3bloke.net/post-details/do_you_need_a_page_browser_for_your_typo3_extension/"
+				title="Blog posting by Dmitry Dulepov about pagebrowser integration" class="external-link">Dmitrys blog
+			postings</a>). Additional hooks give you the possibility to keep control of the generation of the page
+		browser. The extension has a straight documentation, describing the implementation with commented code snippets.
+	</p>
+
+	<h3>Comparison result</h3>
+
+	<p>Both approaches allow the integration of a page browser into your frontend plugin. The convincing documentation
+		and the HTML styling ability of the &quot;Universal page browser&quot; extension finaly make the difference,
+		especially if you rather rely on standard writings than on searching for code snippets.
+	</p>
+</section>
+
+{% include post-taglist.html %}

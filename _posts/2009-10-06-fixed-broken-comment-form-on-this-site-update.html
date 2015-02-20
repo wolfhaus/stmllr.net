@@ -1,0 +1,29 @@
+---
+layout: post
+title: Fixed broken comment form on this site (update)
+date: 2009-10-06 11:22
+excerpt: The comment form of this blog was broken the last two days. The reason was that I disabled the no_cache parameter in the install tool. It seems the ve_guestbook extension somehow relies on this parameter. The comments are now working properly again. Sorry for the inconvenience.
+tags: 
+  - Bugs
+  - Guestbook
+  - no_cache
+  - TYPO3
+  - Extensions
+  - Forms
+  - USER_INT
+  - Caching
+---
+<section>
+	<h3>Update</h3>
+
+	<p>Meanwhile I found out that ve_guestbook disables complete caching of pages with the guestbook form. I don't like
+		that and it's not necessary. The plugin could be rendered as USER_INT instead of disabling page cache. I sent a
+		<a href="http://bugs.typo3.org/view.php?id=12131" title="Bug report about ve_guestbook using no_cache"
+		   class="external-link">bug report #12131</a> and appended a <a
+				href="http://bugs.typo3.org/file_download.php?file_id=8572&amp;type=bug"
+				title="Download the patch which hopefully fixes the issue" class="external-link">patch</a> which fixes
+		this issue: <a href="http://bugs.typo3.org/view.php?id=12131" title="Bug report" class="external-link">http://bugs.typo3.org/view.php?id=12131</a>
+	</p>
+</section>
+
+{% include post-taglist.html %}

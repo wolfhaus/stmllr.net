@@ -1,0 +1,141 @@
+---
+layout: post
+title: Prevent SQL injection in TypoScript when using strings from GET parameters
+date: 2009-11-30 19:02
+excerpt: Whenever you are using GET/POST parameters in SQL queries, you have to face the risk of running into SQL injection. The golden rule here is not to trust user parameters, but always properly check and escape values. This article introduces a TYPO3 extension, which helps to sanitize parameters by extending TypoScript stdWrap. PLEASE ALSO READ THE COMMENTS ON THIS ARTICLE FOR UPDATES IN THE TYPO3 CORE TO TACKLE THIS ISSUE!
+tags: 
+  - TYPO3
+  - TypoScript
+  - Security
+  - SQL injection
+  - stdWrap
+  - cObject
+---
+	<section><h3>Update</h3>
+<p>Please have a look at the comments on this article to&nbsp;read about updates and changes done in the TYPO3 core to tackle this problem.
+</p>
+<h3>Introduction</h3>
+<p>As I have already shown in an <a href="/blog/2009-03-05-is-sql-injection-possible-in-typoscript-objects.html" >article have a year ago</a>, TypoScript is not save against SQL injections. I introduced a case, where a numerical GET parameter (a uid as integer) is used in the WHERE clause of a <a href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/8/#id4251042" title="cObject CONTENT in official TSref" class="external-link" >TypoScript CONTENT cObject</a>. But the parameter could be misused to inject malicious SQL into the WHERE clause. The solution was to parse the GET parameter through the <a href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/5/#id4149585" title="stdWrap documentation in official TSref" class="external-link" >stdWrap function intval</a>. It ensured that only integer values were passed to the WHERE clause.
+</p>
+<p>The posting you are now about to read is meant as  a follow-up to that article. It demonstrates a more advanced case: using a <b>string</b> of a GET parameter inside an SQL query of CONTENT.
+</p>
+<h3>Example code</h3>
+<p>Imagine you offer some search function to your website visitors. The search term is send as a GET parameter and TypoScript compares the term with the header of the content elements of a page. All content element of a page which is matching this comparison are shown. The page content is:
+</p>
+<p><img alt="backend view of content elements" style="border-style: solid; border-width: thin; padding: 2px;" src="/files/images/injection-ce.png" height="169" width="374" />
+</p>
+<p>We use the TypoScript cObject CONTENT to output all matching content elements of a page. The search term is inserted into the WHERE part of the SQL query:
+</p>
+<pre>page.10 = CONTENT<br />page.10 {<br />&nbsp; table = tt_content<br />&nbsp; select {<br />&nbsp;&nbsp;&nbsp; pidInList = 35<br />&nbsp;&nbsp;&nbsp; andWhere.cObject = TEXT<br />&nbsp;&nbsp;&nbsp; andWhere.cObject {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data = GPvar:tx_myext|header<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wrap = header=”|”&nbsp;&nbsp;&nbsp; <br />    }<br />&nbsp; }<br />} </pre>
+<h3>Result</h3>
+<p>If the URL contains the GET parameter tx_myext[header] it uses the given value in the SQL WHERE clause. For example, try this URL to get all content elements which use the term <b>My products</b> as header: 
+</p>
+<pre>http ://www.example.com/index.php?id=123&amp;tx_myext[header]=<b>My products</b></pre>
+<p>That will result in a SQL clause like this:
+</p>
+<pre>SELECT * FROM tt_content ... WHERE ... <b>AND header=”My products”</b> ...</pre>
+<p>Have a look at the output of this TypoScript object. In the frontend, you'll see this:
+</p>
+<p><img alt="Example output without SQL injection" style="border-style: solid; border-width: thin; padding: 2px;" src="/files/images/injection-result1.png" height="186" width="551" />
+</p>
+<h3>SQL injection vulnerability</h3>
+<p>With the TypoScript above, your website is vulnerable to SQL injections. Imagine a visitor uses the following malicious URL for SQL injection:
+</p>
+<pre>http ://www.example.com/index.php?id=123&amp;tx_myext[header]=<b>abc&quot; OR 1=1 OR 1=&quot;1</b></pre>
+<p>This will result in a SQL clause:
+</p>
+<pre>SELECT * FROM tt_content ... WHERE ... <b>AND header=”abc” OR 1=1 OR 1=”1”</b> ...</pre>
+<p>In the frontend, you'll see something like this:
+</p>
+<p><img alt="Example output with SQL injection" style="border-style: solid; border-width: thin; padding: 2px;" src="/files/images/injection-result2.png" height="510" width="597" />
+</p>
+<p>The website shows all content elements, no matter if they are deleted or hidden!
+</p>
+<h3>Solution: quoting and escaping the string </h3>
+<p>To prevent bad guys from injecting SQL with the search term, you need to quote the string and escape possible control characters. Unfortunately, there's no function in stdWrap to do that.
+</p>
+<p>I have recently released the <a href="http://typo3.org/extensions/repository/view/sm_stdwrapquote/current/" title="The sm_stdwrapquote extension in the TYPO3 extension repository on typo3.org" class="external-link-new-window" >&quot;quote functions for stdWrap&quot; extension (sm_stdwrapquote)</a> to TER. This extension adds two functions to TypoScript stdWrap:</p><ul><li>quoteStr to escape special values</li><li>fullQuoteStr to escape special values and add quotes</li></ul><p>It implements the functionality of t3lib_DB-&gt;quoteStr() and t3lib_DB-&gt;fullQuoteStr() to stdWrap. This helps you sanitize and safely use GET/POST strings in TypoScript CONTENT objects without too much hassle.
+</p>
+<h3>Example code with protection against SQL injection</h3>
+<p>The extension provides a simple method to protect your TypoScript from SQL injection. You simply add fullQuoteStr to the andWhere part of your CONTENT object. It can be used like a regular function of stdWrap. When using fullQuoteStr, you also don't need quotes in the wrap:
+</p>
+<pre>page.10 = CONTENT<br />page.10 {<br />&nbsp; table = tt_content<br />&nbsp; select {<br />&nbsp;&nbsp;&nbsp; pidInList = 35<br />&nbsp;&nbsp;&nbsp; andWhere.cObject = TEXT<br />&nbsp;&nbsp;&nbsp; andWhere.cObject {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data = GPvar:tx_myext|header<br /><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fullQuoteStr = tt_content<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wrap = header=|</b><br />&nbsp;&nbsp;&nbsp; }<br />&nbsp; }<br />} </pre>
+<p>The result is that SQL injection will not work anymore. When using the malicious URL, the frontend won't show any content elements at all. fullQuoteStr escapes all quotes inside the GET parameter and quotes the whole string. Data can be safely used with fullQuoteStr inside an SQL SELECT query of CONTENT.
+</p>
+<p>For some more information, read the manual which is shiped with the extension.
+</p>
+<h3>Conclusion</h3>
+<p>You always have to protect your SQL queries of TypoScript cObject CONTENT against SQL injection. Since stdWrap does not ship sufficient functions to sanitize user parameters, use the fullQuoteStr function of the <a href="http://typo3.org/extensions/repository/view/sm_stdwrapquote/current/" title="Extension in TER on typo3.org" class="external-link" >extension sm_stdwrapquote</a>.
+</p>
+<h3>Future implementation in TYPO3 core</h3>
+<p>There's an RFC in the TYPO3 core team list to implement these functions into the core. Unfortunately this did not happen with version 4.3. But I try to push this into 4.4. If you like it, go to the core list and vote for <a href="http://bugs.typo3.org/view.php?id=12094" title="Bug report #12094: add fullQuoteStr to stdWrap" class="external-link" >feature #12094</a>.</p></section>
+		<section>
+							
+			  	<h3>Related articles</h3><ul>
+			 	<li> <a href="/blog/2009-03-05-is-sql-injection-possible-in-typoscript-objects.html" >Is SQL injection possible in TypoScript objects?</a> (<time>March  5, 2009</time>)</li></ul>
+		
+				
+			 					  
+			
+				
+				
+		
+				
+				
+
+		</section>
+		
+		{% include post-taglist.html %}
+
+
+		
+<section class="comments"><h3>Comments</h3><ol>
+	
+			<li id="comment-1">
+				<span class="comment-author">Alex</span> <time class="comment-time" datetime="2009-12-17 20:16">on December 17, 2009 at 20:16</time>
+				<p>
+					Hi!<br />
+<br />
+I created a video tutorial about SQL injection.<br />
+Take a look:<br />
+<br />
+<a href="http://www.webmastervideoschool.com/blog_item.php?id=7" title="video tutorial about SQL injection">http://www.webmastervideoschool.com/blog_item.php?id=7</a>
+				</p>
+			</li>
+		
+			<li id="comment-2">
+				<span class="comment-author">Steffen</span> <time class="comment-time" datetime="2011-03-26 12:34">on March 26, 2011 at 12:34</time>
+				<p>
+					Some "news" on this topic:<br />
+<br />
+In TYPO 4.4, a new concept for building queries has been introduced to TS cObject CONTENT.<br />
+GPvars fetched within the new property "markers" are properly escaped and quoted to prevent SQL injection. They can be inserted into the query with classic ###YOUR_MARKER_TITLE### markers.<br />
+<br />
+If you use this concept, you don't need the sm_stdwrapquote extension anymore.<br />
+<br />
+The following example is taken from the pending documentation [1] for TSref. For implementation details, have a look at the bug report #13940 in mantis [2].<br />
+<br />
+page.60 = CONTENT<br />
+page.60 {<br />
+&nbsp;&nbsp;table = tt_content<br />
+&nbsp;&nbsp;select {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;pidInList = 73<br />
+&nbsp;&nbsp;&nbsp;&nbsp;where = header != ###whatever###<br />
+&nbsp;&nbsp;&nbsp;&nbsp;orderBy = ###sortfield###<br />
+&nbsp;&nbsp;&nbsp;&nbsp;markers {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;whatever.data = GP:first<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sortfield.value = sor<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sortfield.wrap = |ting<br />
+&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+&nbsp;&nbsp;}<br />
+}<br />
+<br />
+[1] <a href="http://wiki.typo3.org/Documentation_changes_in_4.4_and_4.5#13940:_Added_marker_in_CONTENT_object_.5Bclosed_to_Steffen_Kamper.5D.5B4.4.5D_.5BHASPATCH.5D">http://wiki.typo3.org/Documentation_changes_in_4.4_and_4.5<br />
+#13940:_Added_marker_in_CONTENT_object_.5Bclosed_to_Steffen_Kamper.5D.5B4.4.5D_.5BHASPATCH.5D</a><br />
+<br />
+[2] <a href="http://bugs.typo3.org/view.php?id=13940">http://bugs.typo3.org/view.php?id=13940</a>
+				</p>
+			</li>
+		
+	</ol>
+</section>

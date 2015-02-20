@@ -1,0 +1,120 @@
+---
+layout: post
+title: Sample data to test performance of TYPO3 Extbase (Update)
+date: 2011-05-24 14:30
+excerpt: At the time of writing this article, there's a lively discussion going on in the TYPO3 developer mailinglist about performance and architecture of TYPO3 Extbase Extension. This article tries to contribute something practical to the discussion by providing sample data for testing performance with the blog_example extension.
+tags: 
+  - TYPO3
+  - Extbase
+  - Performance
+  - blog_example
+---
+
+<section>
+	<p>Performance and architecture of TYPO3 Extbase is discussed very controversy.&nbsp;Some love it, some hate it
+	(&quot;It does not scale&quot;, &quot;not useable for large setups&quot;). Some also&nbsp;complain about wrong
+	communication (&quot;Extbase is marked&nbsp;as&nbsp;stable, but is alpha&quot;) and others ask for&nbsp;less
+	complains and more&nbsp;contributions (&quot;Go scratch your itch and contribute!&quot;).&nbsp;If you need an
+	example have a look at&nbsp;<a href="http://lists.typo3.org/pipermail/typo3-dev/2011-May/043180.html"
+								   title="Mailinglist discussion archived on lists.typo3.org" class="external-link">
+		&quot;The extbase dilemma&quot; thread in the TYPO3-dev Mailinglist</a>.
+	</p>
+
+	<h3>The real dilemma I see</h3>
+
+	<p>What irritates me is that we have &nbsp;more than&nbsp;120 postings in this dicsussion&nbsp;and noone has&nbsp;yet&nbsp;provided&nbsp;reproduceable&nbsp;tests,&nbsp;data
+		or&nbsp;measurements results to tackle the mentioned&nbsp;problems.
+	</p>
+
+	<h3>Solution</h3>
+
+	<p>For doing comparable&nbsp;tests, we need&nbsp;sample data. blog_example is the reference implementation for
+		Extbase/Fluid, so I think&nbsp;we should use it for tests.
+	</p>
+
+	<p>I provide the <a
+			href="https://sourceforge.net/projects/typo3/files/Temporary%20Data/blog_example_sample_data.sql.bz2"
+			title="Download file at sourceforge" class="external-link">sample blog_example&nbsp;data as SQL file</a>.
+		<b>(Download bzip compressed SQL file from sourceforge mirror,&nbsp;35MB)</b>
+	</p>
+
+	<p>The data&nbsp;be used by anyone who wants to test Extbase issues using the blog_example extension.&nbsp;The
+		sample data&nbsp;contains:&nbsp;</p>
+	<ul>
+		<li>1 administrator</li>
+		<li>100 blogs</li>
+		<li>100 authors (1 for each blog)</li>
+		<li>10.000 posts (100 for each blog)</li>
+		<li>1.000.000 comments (100 for each post)</li>
+		<li>147 tags (between 1 and 5 for each post)</li>
+	</ul>
+	<p>The data itself (post content, tags, names etc.) is randomly generated with using shuffled lorem ispum blindtexts
+		of various length.
+	</p>
+
+	<p>The amount of data can't be handled with t3d-import/export. So I provide raw sql data which has been exported via
+		mysqldump. Some hints to make it work:</p>
+	<ul>
+		<li>The sql file contains only the blog_example tables. Pages, Plugin and fe_user have to be set up manually.
+		</li>
+		<li>The storagePid&nbsp;used when creating the data was &quot;3&quot;. So you need to have a page with uid=3 and
+			set plugin.tx_blogexample.persistence.storagePid = 3.
+		</li>
+		<li>The corresponding admin record (fe_user) has uid 4 and is of record type &quot;Blog Admin&quot;
+			(fe_users.tx_extbase_type = Tx_BlogExample_Domain_Model_Administrator)&nbsp;</li>
+	</ul>
+	<p>I also provide a <a href="https://sourceforge.net/projects/typo3/files/Temporary%20Data/full_typo3_db.sql.bz2"
+						   title="Download file at sourceforge" class="external-link">complete TYPO3 DB dump</a> <b>(Download
+		bzip2 compressed SQL file from sourceforge mirror,&nbsp;35MB)</b>.
+	</p>
+
+	<p>It&nbsp;contains all TYPO3 tables, including the records for pages and fe_users. The dump is build from a TYPO3
+		4.5 dummy installation. The username/password of the admin be_user is admin/password
+	</p>
+
+	<h3>What's next?</h3>
+
+	<p>Now it's up to anyone to set up testing environments, create test&nbsp;scenarios, provide and compare&nbsp;results.
+		Then we have a basis to tackle the problems and push the TYPO3 project further.&nbsp;Happy testing!
+	</p>
+
+	<h3>Update</h3>
+
+	<p>I have updated the sampla data to fix some validation issues they produce&nbsp;in Extbase. Using the data&nbsp;should
+		work now without throwing validation errors.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Andreas Wolf</span>
+			<time class="comment-time" datetime="2011-09-22 11:35">on September 22, 2011 at 11:35</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				a great test set, thanks for your efforts! However, I would like to get a similar test set for regular
+				pages/content. Would you mind sharing the code you used for generating this test data?<br/>
+				<br/>
+				Cheers<br/>
+				Andreas
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-09-22 18:33">on September 22, 2011 at 18:33</time>
+			<p>
+				I simply used the BlogFactory code from blog_example and put some while loops around it :)<br/>
+				<br/>
+				http://forge.typo3.org/projects/typo3-mvcblogexample/repository/revisions/master/entry/Classes/Domain/Service/BlogFactory.php<br/>
+				<br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

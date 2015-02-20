@@ -1,0 +1,1252 @@
+---
+layout: post
+title: Live mp3 streaming from audio-in with DarkIce and Icecast2 on Raspberry Pi
+date: 2012-08-10 04:28
+excerpt: As a response to my lastest article about Streaming audio with MPD and Icecast2 on Raspberry Pi, I was asked for some ideas about live streaming. I took the chance to plug in an usb audio device with microphone to RasPi and tried to get it working. 
+tags: 
+  - RaspberryPi
+  - RasPi
+  - DarkIce
+  - Icecast
+  - Streaming Audio
+  - Live Streaming
+---
+<section><p><b>Update (2012/08/11)</b>: Added a step to update package version number and added &quot;devscripts&quot;
+	to the list of suggested packages .
+</p>
+
+	<h3>What you need to have</h3>
+	<ul>
+		<li>Raspberry Pi with <a href="http://www.raspbian.org/RaspbianFAQ#What_is_Raspbian.3F"
+								 title="What is Raspbian?" class="external-link">Raspbian</a> installed,
+		</li>
+		<li>USB sound stick with an input device,</li>
+		<li><a href="http://code.google.com/p/darkice/" title="What is darkice?" class="external-link">DarkIce</a> to
+			capture audio from the audio input and send it to Icecast2,
+		</li>
+		<li><a href="http://www.icecast.org/" title="Icecase2" class="external-link">Icecast2</a> to distribute the
+			audio stream.
+		</li>
+	</ul>
+	<h3>Compiling and installing DarkIce</h3>
+
+	<p>The default darkice package comes without mp3 support. Since mp3 is the most widespread codec, I decided to build
+		my own package of darkice with mp3 support.
+	</p>
+
+	<p>Add a deb-src repository to your sources list at /etc/apt/sources.list:
+	</p>
+	<pre>$ sudo sh -c &quot;echo 'deb-src http://mirrordirector.raspbian.org/raspbian/ wheezy main contrib non-free rpi' &gt;&gt; /etc/apt/sources.list&quot;<br/>$ sudo apt-get update<br/>(...)</pre>
+	<p>To fullfill the build dependencies, you have to install some additional packages:
+	</p>
+	<pre>$ sudo apt-get --no-install-recommends install build-essential devscripts autotools-dev fakeroot dpkg-dev debhelper autotools-dev dh-make quilt ccache libsamplerate0-dev libpulse-dev libaudio-dev lame libjack-jackd2-dev libasound2-dev libtwolame-dev libfaad-dev libflac-dev libmp4v2-dev libshout3-dev libmp3lame-dev<br/>(...)</pre>
+	<p>(Not sure if you need all these packages.&nbsp;But it won't hurt.)
+	</p>
+
+	<p>Create a working directory:
+	</p>
+	<pre>$ mkdir src &amp;&amp; cd src/</pre>
+	<p>Get the source package of darkice:
+	</p>
+	<pre>$ apt-get source darkice<br/>(...)</pre>
+	<p>Change the compile configuration to match Raspbian environment:
+	</p>
+	<pre>$ cd darkice-1.0/<br/>$ vi debian/rules</pre>
+	<p>&nbsp;</p>
+	<pre>#!/usr/bin/make -f<br/><br/>%:<br/>	dh $@<br/><br/>.PHONY: override_dh_auto_configure<br/>override_dh_auto_configure:<br/>	ln -s /usr/share/misc/config.guess .<br/>	ln -s /usr/share/misc/config.sub .<br/>	dh_auto_configure -- --prefix=/usr --sysconfdir=/usr/share/doc/darkice/examples --with-vorbis-prefix=/usr/lib/arm-linux-gnueabihf/ --with-jack-prefix=/usr/lib/arm-linux-gnueabihf/ --with-alsa-prefix=/usr/lib/arm-linux-gnueabihf/ --with-faac-prefix=/usr/lib/arm-linux-gnueabihf/ --with-aacplus-prefix=/usr/lib/arm-linux-gnueabihf/ --with-samplerate-prefix=/usr/lib/arm-linux-gnueabihf/ --with-lame-prefix=/usr/lib/arm-linux-gnueabihf/ CFLAGS='-march=armv6 -mfpu=vfp -mfloat-abi=hard'</pre>
+	<p>Please consider to <a href="/files/linux/rules" title="Initiates file download" class="download">download the
+		rules file from here</a> instead of copy&amp;paste the lines above. The build will fail if line beginnings
+		contains spaces instead of tabs.
+	</p>
+
+	<p>Before you start to build the package, change the version of the package to reflect mp3 support. debchange will
+		ask you to add some comments to the changelog.
+	</p>
+	<pre>$ debchange -v 1.0-999~mp3+1<br/><br/>darkice (1.0-999~mp3+1) UNRELEASED; urgency=low<br/><br/>&nbsp; * New build with mp3 support<br/><br/>&nbsp;--&nbsp; &lt;pi@raspberrypi&gt;&nbsp; Sat, 11 Aug 2012 13:35:06 +0000</pre>
+	<p>Build and install the darkice package:
+	</p>
+	<pre>$ dpkg-buildpackage -rfakeroot -uc -b<br/>(...)<br/>$ sudo dpkg -i ../darkice_1.0-999~mp3+1_armhf.deb<br/>(...)<br/>Preparing to replace darkice 1.0-999 (using .../darkice_1.0-999~mp3+1_armhf.deb) ...<br/>Unpacking replacement darkice ...<br/>Setting up darkice (1.0-999~mp3+1) ...<br/>(...)</pre>
+	<p>Now you have installed DarkIce&nbsp;with mp3 support.
+	</p>
+
+	<h3>Configuring DarkIce</h3>
+
+	<p>Add a configuration by copying the template file:
+	</p>
+	<pre>$ sudo cp /usr/share/doc/darkice/examples/darkice.cfg /etc/</pre>
+	<p>Here's an example configuration to have:</p>
+	<ul>
+		<li>read input from an usb device using the alsa audio device hw1,0</li>
+		<li>stream mp3 output to an icecast2 server</li>
+	</ul>
+	<pre># see the darkice.cfg man page for details<br/><br/># this section describes general aspects of the live streaming session<br/>[general]<br/>duration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # duration of encoding, in seconds. 0 means forever<br/>bufferSecs&nbsp;&nbsp;&nbsp; = 5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # size of internal slip buffer, in seconds<br/>reconnect&nbsp;&nbsp;&nbsp;&nbsp; = yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # reconnect to the server(s) if disconnected<br/><br/># this section describes the audio input that will be streamed<br/>[input]<br/>device&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = hw:1,0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Alsa soundcard device for the audio input<br/>sampleRate&nbsp;&nbsp;&nbsp; = 44100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # sample rate in Hz. try 11025, 22050 or 44100<br/>bitsPerSample = 16&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # bits per sample. try 16<br/>channel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # channels. 1 = mono, 2 = stereo<br/><br/># this section describes a streaming connection to an IceCast2 server<br/># there may be up to 8 of these sections, named [icecast2-0] ... [icecast2-7]<br/># these can be mixed with [icecast-x] and [shoutcast-x] sections<br/>[icecast2-0]<br/>bitrateMode&nbsp;&nbsp; = vbr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # variable bit rate<br/>format&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = mp3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # format of the stream: mp3<br/>quality&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0.6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # quality of the stream sent to the server<br/>server&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = localhost&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # host name of the server<br/>port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 8000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # port of the IceCast2 server, usually 8000<br/>password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = SOURCE_PASSWORD&nbsp; # source password to the IceCast2 server<br/>mountPoint&nbsp;&nbsp;&nbsp; = raspi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # mount point of this stream on the IceCast2 server<br/>name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = RasPi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # name of the stream<br/>description&nbsp;&nbsp; = DarkIce on RasPi # description of the stream<br/>url&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = http://localhost # URL related to the stream<br/>genre&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = my genre&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # genre of the stream<br/>public&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = no&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # advertise this stream?<br/>localDumpFile = recording.mp3&nbsp;&nbsp;&nbsp; # Record also to a file</pre>
+	<p>This is just an example and neither optimized nor secure! Learn more about darkice in the documentation section
+		below /usr/share/doc/darkice/. The configuration options are explained in the manpage:
+	</p>
+	<pre>$ man darkice.cfg</pre>
+	<p>Btw., to find your alsa input devices, ask arecord:
+	</p>
+	<pre>$ arecord -l<br/>**** List of CAPTURE Hardware Devices ****<br/>card 1: U0x46d0x825 [USB Device 0x46d:0x825], device 0: USB Audio [USB Audio]<br/>&nbsp; Subdevices: 1/1<br/>&nbsp; Subdevice #0: subdevice #0</pre>
+	<p>This particular input device is the microphone of a Logitech H270 webcam. It&nbsp;can be addressed using hw:1,0
+		(Card 1, Subdevice 0).
+	</p>
+
+	<p>Keep in mind that Raspberry Pi has no input audio devices on board. You have to plug additional soundcard
+		hardware to usb.
+	</p>
+
+	<h3>Installing Icecast2</h3>
+
+	<p>If you don't have an icecast2 server running somewhere, you could set one up on RasPi.
+	</p>
+	<pre>$ sudo aptitude install icecast2</pre>
+	<p>The package manager will ask you to configure Icecast2. You should do so and set a hostname and passwords for
+		source, relay and administration. Needless to say to use strong passwords. The source password will be needed in
+		the darkice.cfg configuration. (See SOURCE_PASSWORD in the above example)
+	</p>
+
+	<h3>Running DarkIce to stream audio</h3>
+	<pre>$ darkice<br/>(...)<br/>Using config file: /etc/darkice.cfg<br/>Using ALSA DSP input device: hw:1,0<br/>Could not set POSIX real-time scheduling, this may cause recording skips.<br/>Try to run darkice as the super-user.</pre>
+	<p>When you run into the following &quot;sink error&quot; message, check if icecast is running and passwords are
+		matching:
+	</p>
+	<pre>DarkIce: LameLibEncoder.cpp:75: lame lib opening underlying sink error [0]</pre>
+	<p>Now grab your favorite instrument and start a live jam.&nbsp;To listen to it, open your browser, navigate to the
+		Raspberry Pi host at http://your.raspberry.hostname:8000/raspi and hook up into the stream with your favorite
+		player.
+	</p>
+
+	<p><img title="Icecase Stream" src="/files/images/icecast.png" height="378" width="509" alt=""/>
+	</p>
+
+	<h3>Performance</h3>
+
+	<p>I have done some very basic measurements. With the above configurations, the CPU load is about 50%. Very nice!
+	</p>
+
+	<h3>Did this article help you? Spread the word!</h3>
+
+	<p>If you liked this article, please share it in your preferred social media circles (twitter, g+, facebook, etc.)
+	</p>
+
+	<h3>Credits</h3>
+
+	<p>Thanks to Patrick Adams for inspiration. Looking forward for a turntable session to listen to ;-)
+	</p>
+</section>
+
+<section>
+	<h3>Related articles</h3>
+	<ul>
+		<li><a href="/blog/2012-07-23-streaming-audio-with-mpd-and-icecast2-on-raspberry-pi.html">Streaming audio with
+			MPD and Icecast2 on Raspberry Pi</a> (
+			<time>July 23, 2012</time>
+			)
+		</li>
+	</ul>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">tobie</span>
+			<time class="comment-time" datetime="2012-09-07 10:21">on September 07, 2012 at 10:21</time>
+			<p>
+				hi, could I ask about audio input quality? <br/>
+				<br/>
+				I'm using arecord to get audio in from a usb device at plughw:1,0, but sound quality is not good. <br/>
+				<br/>
+				Are you getting good quality sound input? Are you using a USB hub?
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-09-07 12:40">on September 07, 2012 at 12:40</time>
+			<p>
+				Hi tobie,<br/>
+				<br/>
+				I have a clear signal with my device. Whatever "clear" means to the microphone of my Logitech H270
+				webcam ;-)<br/>
+				The device is connected directly to one of the USB ports.<br/>
+				<br/>
+				Just a wild guess: the reason for your problem could be the samplerate.<br/>
+				<br/>
+				Try to find out which samplerate your device supports and then set ALSA accordingly.<br/>
+				I had similar problems on a Seagate Dockstar with C-Media Audio USB Adapter. I fixed it by adding the
+				following settings to /etc/asound.conf:<br/>
+<pre><code>pcm.rate_convert {
+	type plug
+	slave {
+		pcm "hw:1,0"
+		rate 48000
+	}
+}</code></pre>
+			<br/>
+			See opensrc docs: <a href="http://alsa.opensrc.org/.asoundrc#Converting_Sample_Rates_On_Input">http://alsa.opensrc.org/.asoundrc#Converting_Sample_Rates_On_Input</a><br/>and
+			also the official alsa docs: <a href="http://www.alsa-project.org/main/index.php/Asoundrc">http://www.alsa-project.org/main/index.php/Asoundrc</a>
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Ben</span>
+			<time class="comment-time" datetime="2012-09-19 08:29">on September 19, 2012 at 08:29</time>
+			<p>
+				Hi, <br/>
+				<br/>
+				How much delay is there in the recording (provided the pi and the listening device are on the same
+				network)?<br/>
+				I tried both RTP and HTTP Streaming successfully but with ~15s delay (no buffering used) and 30%
+				CPU.<br/>
+				<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-09-19 14:59">on September 19, 2012 at 14:59</time>
+			<p>
+				Hi Ben,<br/>
+				<br/>
+				mainly you have two buffers which need to get filled:<br/>
+				<br/>
+				1) Darkice buffer, configured with "bufferSecs" (5 seconds in my example cfg)<br/>
+				2) Icecast2 buffer aka "queue-size" and eventually "burst-size>", which need some time to get
+				filled.<br/>
+				<br/>
+				Not sure about how much delay is caused by resampling, but mpeg is not designed for low latency
+				transport/transition. Maybe aac or ogg perform better here. I would be glad if you'd try and report back
+				here.<br/>
+				<br/>
+				If you have both Darkice and icecast2 on one host, you can reduce the Darkice buffer. not sure if 0 is a
+				good choice, but you could also try and frankly report here.<br/>
+				However, if you want to provide a stable stream for clients on the network, you should not turn off
+				icecast2 buffers completely.<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Ben</span>
+			<time class="comment-time" datetime="2012-09-19 21:40">on September 19, 2012 at 21:40</time>
+			<p>
+				Thanks for documenting this!<br/>
+				<br/>
+				What was the latency you experienced when listening on the same network? By latency, i mean the time
+				between the moment a sound is recorded and the moment it is received on the remote device.<br/>
+				<br/>
+				Fyi, the best I have managed is ~15s. Not really real time...
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-09-20 11:45">on September 20, 2012 at 11:45</time>
+			<p>
+				I have experienced approx. the same 15 seconds.<br/>
+				<br/>
+				If you like to nail down the root of your latency, you could sniff the network traffic e.g. with
+				wireshark. Then you should roughly see how much time goes by until darkice starts streaming to
+				icecast.<br/>
+				<br/>
+				Latency is nothing unusual for consumer (aka "mp3") audio streams in the internet.
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Seva</span>
+			<time class="comment-time" datetime="2012-10-03 00:52">on October 03, 2012 at 00:52</time>
+			<p>
+				Have you done any load testing with actual users connected? I wonder how many listeners the RPi could
+				handle..
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-10-03 01:22">on October 03, 2012 at 01:22</time>
+			<p>
+				Though I haven't tested this, I guess the network would be the bottleneck.<br/>
+				<br/>
+				RPi has only a network capacity of 100MBit/s, which theoretically means approx. 800 concurrent listeners
+				with a 128k stream. This does not consider any overhead caused by network protocols and the ones.<br/>
+				<br/>
+				If you like to test this, have a look at this article, including a basic test script:
+				http://www.icecast.org/loadtest1.php<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">J@y</span>
+			<time class="comment-time" datetime="2012-10-08 02:25">on October 08, 2012 at 02:25</time>
+			<p>
+				I love this tutorial it was exactly what i needed. But I'm just getting static noise when its recording
+				from mic and nothing else.
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author">J@y</span>
+			<time class="comment-time" datetime="2012-10-08 02:30">on October 08, 2012 at 02:30</time>
+			<p>
+				by the way this is what my asound.conf looks like - not sure what most of it means tho:<br/>
+				<br/>
+				pcm.mmap0 {<br/>
+				type mmap_emul;<br/>
+				slave {<br/>
+				pcm "hw:0,0";<br/>
+				}<br/>
+				}<br/>
+				<br/>
+				pcm.!default {<br/>
+				type plug;<br/>
+				slave {<br/>
+				pcm mmap0;<br/>
+				}<br/>
+				}
+			</p>
+		</li>
+
+		<li id="comment-11">
+			<span class="comment-author"><a href="http://www.filmmaking.com.br" rel="external">Guilherme
+				Rambo</a></span>
+			<time class="comment-time" datetime="2012-10-09 03:22">on October 09, 2012 at 03:22</time>
+			<p>
+				My sound is sort of chunky, here's a sample: http://cl.ly/0y0n3y2q1g04 (the static noise is on purpose,
+				notice it clips a few times every second).<br/>
+				<br/>
+				I've tried sample rates 44100, 48000 and 22050. 48000 seems to yield the best result, but still has that
+				clipping.<br/>
+				<br/>
+				Also tried that asound.conf stuff. Tried different bufferSecs like 5, 10, 15... but no luck...<br/>
+				<br/>
+				I'm using a Behringer UCA200.<br/>
+				<br/>
+				Any thoughts?
+			</p>
+		</li>
+
+		<li id="comment-12">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-10-09 10:51">on October 09, 2012 at 10:51</time>
+			<p>
+				J@y and Guilherme Rambo,<br/>
+				<br/>
+				please have a look at the ALSA docs, I referred to at <a
+					href="http://www.t3node.com/blog/live-streaming-mp3-audio-with-darkice-and-icecast2-on-raspberry-pi/#comment-2">http://www.t3node.com/blog/live-streaming-mp3-audio-with-darkice-and-icecast2-on-raspberry-pi/#comment-2</a><br/>
+				<br/>
+				You could also get in touch with the ALSA community via Mailinglists, Newsgroups etc. I am not really
+				experienced with ALSA and can't help you out.
+			</p>
+		</li>
+
+		<li id="comment-13">
+			<span class="comment-author">Casey</span>
+			<time class="comment-time" datetime="2012-12-05 16:01">on December 05, 2012 at 16:01</time>
+			<p>
+				Thank you so much for this guide. My only problem is that darkice seems to crash after a while, still
+				figuring that part out though. <br/>
+				<br/>
+				My question is how to add this to the boot initialization. I went through a couple forums and blogs on
+				adding items to startup but my linux just isn't strong enough to pull out the pertinent information. If
+				you can assist in instructions to start darkice after bootup that would be amazing.<br/>
+				<br/>
+				Thank you!
+			</p>
+		</li>
+
+		<li id="comment-14">
+			<span class="comment-author">Casey</span>
+			<time class="comment-time" datetime="2012-12-05 16:02">on December 05, 2012 at 16:02</time>
+			<p>
+				Thank you so much for this guide. My only problem is that darkice seems to crash after a while, still
+				figuring that part out though. <br/>
+				<br/>
+				My question is how to add this to the boot initialization. I went through a couple forums and blogs on
+				adding items to startup but my linux just isn't strong enough to pull out the pertinent information. If
+				you can assist in instructions to start darkice after bootup that would be amazing.<br/>
+				<br/>
+				Thank you!
+			</p>
+		</li>
+
+		<li id="comment-15">
+			<span class="comment-author">Casey</span>
+			<time class="comment-time" datetime="2012-12-05 16:03">on December 05, 2012 at 16:03</time>
+			<p>
+				Sorry for double post, was having trouble with captcha
+			</p>
+		</li>
+
+		<li id="comment-16">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-12-05 19:49">on December 05, 2012 at 19:49</time>
+			<p>
+				Hi Casey,<br/>
+				<br/>
+				you probably need a bootscript and add that to your rc. Find a howto at
+				http://www.debian-administration.org/articles/28
+			</p>
+		</li>
+
+		<li id="comment-17">
+			<span class="comment-author">Pedro</span>
+			<time class="comment-time" datetime="2013-01-04 02:27">on January 04, 2013 at 02:27</time>
+			<p>
+				Hi, great tutorial.<br/>
+				<br/>
+				I'm getting the right message from darkice as you can see below.<br/>
+				However at the icecast level, after opening the URL ao don't hear anything. Its necessary to use
+				arecord?<br/>
+				<br/>
+				I want to stream audio directly from my webcam. I tested with aplay and is working fine.<br/>
+				<br/>
+				Help me please.<br/>
+				<br/>
+				BR,<br/>
+				Pedro Guerreiro<br/>
+				<br/>
+				<br/>
+				<br/>
+				pedro@raspberrypi ~ $ sudo darkice<br/>
+				[sudo] password for pedro: <br/>
+				DarkIce 1.0 live audio streamer, http://code.google.com/p/darkice/<br/>
+				Copyright (c) 2000-2007, Tyrell Hungary, http://tyrell.hu/<br/>
+				Copyright (c) 2008-2010, Akos Maroy and Rafael Diniz<br/>
+				This is free software, and you are welcome to redistribute it <br/>
+				under the terms of The GNU General Public License version 3 or<br/>
+				any later version.<br/>
+				<br/>
+				Using config file: /etc/darkice.cfg<br/>
+				Using ALSA DSP input device: plughw:1,0<br/>
+				Using POSIX real-time scheduling, priority 98<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-18">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-05 16:33">on January 05, 2013 at 16:33</time>
+			<p>
+				Hi Pedro,<br/>
+				<br/>
+				using arecord is not necessary here. Darkice directly fetches the input signal and streams it to
+				icecast2.<br/>
+				<br/>
+				Can you see your stream in icecast2 when you open http://your.raspberry.hostname:8000/raspi in your
+				browser? (as shown in the article screenshot above)<br/>
+				<br/>
+				If so, then make sure, you have configured the correct device in darkice.cfg as given from arecord
+				-l<br/>
+				<br/>
+				[input]<br/>
+				device = hw:1,0<br/>
+				<br/>
+				Maybe you setting hw:1,0 instead of plughw:1,0 helps.<br/>
+				<br/>
+				If your stream is not shown up in icecast2 at all, then check if mountpoint, password and url in the
+				darkice AND icecast2 configuration match.<br/>
+				icecast2 configuration can be found in /etc/icecast2/icecast.xml<br/>
+				Also have a look at the log from icecast2. could be that the logging needs to be turned on first. This
+				is also configured in the config file mentioned above.
+			</p>
+		</li>
+
+		<li id="comment-19">
+			<span class="comment-author">Axel</span>
+			<time class="comment-time" datetime="2013-01-08 20:51">on January 08, 2013 at 20:51</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				thanks for publishing this HowTo. Almost everyone should be able to follow the instructions on this
+				page. <br/>
+				<br/>
+				I wanted to stream music - especially my CD collection - from my raspberry to my local network without
+				first converting the CD's to MP3 files. I have a Sonos network and a NOXON radio which work well with
+				this solution. <br/>
+				<br/>
+				For me this is the perfect solution:<br/>
+				<br/>
+				audio CD - Player is connected to a behringer_ufo_202 audio interface which is connected to my
+				raspberry. At first I tried to use a cheap usb-soundcard which was mono and has a very bad sampling
+				quality. After connecting the Behringer Interface, I had a clear sound sampling. Any other good
+				interface will do the same I think. For Vinyl samplings this one has a audio pre amplifier built in. Do
+				not waste time with poor audio equipment. I will test audio quality with a 96 Khz sampling rate soon.
+				<br/>
+				<br/>
+				One word to the configuration: You should set<br/>
+				<br/>
+				pcm.rate_convert {<br/>
+				type plug<br/>
+				slave {<br/>
+				pcm "hw:1,0"<br/>
+				rate 48000<br/>
+				}<br/>
+				}<br/>
+				<br/>
+				So now I can automatically stream every sound input to my network and connect any streaming client to
+				the raspberry Icecast server.
+			</p>
+		</li>
+
+		<li id="comment-20">
+			<span class="comment-author">teratech</span>
+			<time class="comment-time" datetime="2013-01-11 05:53">on January 11, 2013 at 05:53</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				What a great tutorial! I have been running Darkice on Single Board Computer and now want to try the same
+				on a Rasp Pi. After following your tutorial, I get the following information when trying to start
+				Darkice on the Rasp Pi;<br/>
+				<br/>
+				<br/>
+				Using config file: /etc/darkice.cfg<br/>
+				Using ALSA DSP input device: hw:1,0<br/>
+				Using POSIX real-time scheduling, priority 98<br/>
+				DarkIce: TcpSocket.cpp:251: connect error [111]<br/>
+				<br/>
+				Can you suggest what I am missing?<br/>
+				<br/>
+				If you need more information like the config file, then let me know.<br/>
+				<br/>
+				Thanks!<br/>
+				<br/>
+				teratech
+			</p>
+		</li>
+
+		<li id="comment-21">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-11 10:55">on January 11, 2013 at 10:55</time>
+			<p>
+				Hi teratech,<br/>
+				<br/>
+				seems like Darkice is not able to connect with your Icecast2 server. Check server and port settings in
+				the [icecast2-0] section of the Darkice config file.<br/>
+				<br/>
+				And also test if icecast2 is running and accepting incoming TCP connections on the specified host
+				address/port.<br/>
+				<br/>
+<pre><code>$ sudo netstat -ltpn | grep icecast2
+
+Proto Recv-Q Send-Q Local Address Foreign Address State PID/Program name
+tcp 0 0 xx.xx.xx.xx:8000 0.0.0.0:* LISTEN 1751/icecast2</code></pre>
+
+			</p>
+		</li>
+
+		<li id="comment-22">
+			<span class="comment-author">teratech</span>
+			<time class="comment-time" datetime="2013-01-12 02:32">on January 12, 2013 at 02:32</time>
+			<p>
+				Hey Steffen,<br/>
+				Thanks for the quick reply. I tried to run the netstat command but nothing came back. Then it struck me
+				that your instruction were to install both Darkice and Icecast on a Rasp Pi. When using the SBC I also
+				had an external server running Icecast2. I am using the same configuration information to point Darkice
+				on the Rasp Pi to the external server. I am using the same server, port, password and mountPoint as I
+				used on the SBC which connects to the Icecast server without an issue. Is there another way to check the
+				Rasp Pi connectivity to the remote server? Am I catching all the important network configuration
+				information with server, port, password and mountPoint data?<br/>
+				<br/>
+				Here is the config file data for server connection:<br/>
+				<br/>
+				<br/>
+				bitrateMode = abr # average bit rate<br/>
+				format = mp3 # format of the stream: mp3<br/>
+				bitrate = 128 # bitrate of the stream sent to the server<br/>
+				server = 66.55.xxx.xx # host name of the server<br/>
+				port = 80xx # port of the IceCast2 server, usually 8000<br/>
+				password = xxxxxxxx # source password to the IceCast2 server<br/>
+				mountPoint = live # mount point of this stream on the IceCast2 server<br/>
+				<br/>
+				I deeply appreciate your assistance! teratech
+			</p>
+		</li>
+
+		<li id="comment-23">
+			<span class="comment-author">teratech</span>
+			<time class="comment-time" datetime="2013-01-12 04:28">on January 12, 2013 at 04:28</time>
+			<p>
+				Hey Steffen,<br/>
+				<br/>
+				I figured what the problem was. I needed to comment out the additional options in the config file that
+				were below the Icecast2 examples. I am referring to the shoutcast and Icecast parts of the example
+				config file. So Darkice is working on the Rasp Pi for me now. Thanks again for your help and tutorial!
+				teratech
+			</p>
+		</li>
+
+		<li id="comment-24">
+			<span class="comment-author"><a href="http://nthmost.com" rel="external">Naomi Most</a></span>
+			<time class="comment-time" datetime="2013-01-18 02:17">on January 18, 2013 at 02:17</time>
+			<p>
+				Thanks for this guide, definitely saved me a ton of time.<br/>
+				<br/>
+				I just wanted to comment that the single snafu I ran into was in creating the debian/rules file.<br/>
+				<br/>
+				If you copy and paste the provided code into the file, there's the danger of the tabs being converted
+				into spaces, which results in a "missing separator" error when you go to compile the source, which will
+				probably look like this:<br/>
+				<br/>
+				debian/rules:4: *** missing separator. Stop.<br/>
+				<br/>
+				To remedy, you just need to delete all spaces at the beginning of lines, but make sure there is a single
+				tab at the front of every line that follows a colon.<br/>
+				<br/>
+				I'm mentioning this so that this page will be searchable for that error and so people will know how to
+				deal with it. :)<br/>
+				<br/>
+				Cheers and thanks again.
+			</p>
+		</li>
+
+		<li id="comment-25">
+			<span class="comment-author">squiregeek</span>
+			<time class="comment-time" datetime="2013-01-21 01:14">on January 21, 2013 at 01:14</time>
+			<p>
+				I've been trying to install icecast2 to no avail. I've used sudo apt-get install icecast2 and sudo
+				install aptitude icecast2 and they both return no packages. I'm running raspbian wheezy. Has something
+				changed?
+			</p>
+		</li>
+
+		<li id="comment-26">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-21 10:04">on January 21, 2013 at 10:04</time>
+			<p>
+				Hi squiregeek,<br/>
+				<br/>
+				can you post the content of your file /etc/apt/sources.list please?<br/>
+				<br/>
+				Alternatively download the package from here: http://archive.raspbian.org/raspbian/pool/main/i/icecast2/<br/>
+				<br/>
+				Drawback: Then you will not receive updates.
+			</p>
+		</li>
+
+		<li id="comment-27">
+			<span class="comment-author">squiregeek</span>
+			<time class="comment-time" datetime="2013-01-21 14:36">on January 21, 2013 at 14:36</time>
+			<p>
+				The sources.list is: deb-src http://mirrordirector.raspbian.org/raspbian/ wheezy main contrib non-free
+				rpi<br/>
+				<br/>
+				I haven't changed it since install.<br/>
+				<br/>
+				I found a deb at the German Debian site, but it failed to install with no useful messages.<br/>
+				<br/>
+				Thanks for the quick response. I'll try the download you've pointed out and see how it goes.
+			</p>
+		</li>
+
+		<li id="comment-28">
+			<span class="comment-author">squiregeek</span>
+			<time class="comment-time" datetime="2013-01-21 14:41">on January 21, 2013 at 14:41</time>
+			<p>
+				Son of a gun, it installed. Now I have a project to use up the rest of my day!<br/>
+				<br/>
+				Thanks for the help, and for showing the way to doing some streaming with this remarkable little
+				machine.
+			</p>
+		</li>
+
+		<li id="comment-29">
+			<span class="comment-author">Andrew </span>
+			<time class="comment-time" datetime="2013-01-22 00:38">on January 22, 2013 at 00:38</time>
+			<p>
+				Is there a way this could be configured to take an analogue audio in through the 3.5mm jack on the
+				Pi?<br/>
+				<br/>
+				I'm wondering if I can set up an R-Pi attached to an audio source (e.g. Radio) and then be able to
+				listen to that audio feed over the net?
+			</p>
+		</li>
+
+		<li id="comment-30">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-22 13:36">on January 22, 2013 at 13:36</time>
+			<p>
+				Andrew,<br/>
+				<br/>
+				the 3,5mm jack onboard the Pi only is audio out. <br/>
+				You need an additional, external USB sound device for audio-in.
+			</p>
+		</li>
+
+		<li id="comment-31">
+			<span class="comment-author">Tyler</span>
+			<time class="comment-time" datetime="2013-01-27 05:13">on January 27, 2013 at 05:13</time>
+			<p>
+				Thanks for the tutorial! So far seems good, got Icecast2 and darkice running. However, there doesn't
+				seem to be any audio from the microphone. <br/>
+				<br/>
+				I am using an XLR to USB cable so I have a feeling that it isn't amplifying the sound from the mic
+				enough. When I tap the mic I can hear faint clicks in the stream.<br/>
+				<br/>
+				I have turned everything up in the alsamixer so I have a feeling I just need a different type of input
+				device. Can anyone give me a suggestion on what devices they are connecting to RPi for audio input?<br/>
+				<br/>
+				Thanks!
+			</p>
+		</li>
+
+		<li id="comment-32">
+			<span class="comment-author">iffe</span>
+			<time class="comment-time" datetime="2013-01-27 06:45">on January 27, 2013 at 06:45</time>
+			<p>
+				Thanks for detailed info! Much appreciated.
+			</p>
+		</li>
+
+		<li id="comment-33">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-27 19:50">on January 27, 2013 at 19:50</time>
+			<p>
+				Tyler, try a preamplifier
+			</p>
+		</li>
+
+		<li id="comment-34">
+			<span class="comment-author">Arnold</span>
+			<time class="comment-time" datetime="2013-01-30 16:06">on January 30, 2013 at 16:06</time>
+			<p>
+				Steffen, <br/>
+				Thanks for your step-by-step explanation. It is really helpful.<br/>
+				I like to use the darkice part only. Download and building all went well until the 'sudo dpkg -i
+				../darkice_1.0-999~mp3+1_armhf.deb' statement. Actually that went well too, but no darkice binary in
+				/usr/bin ............ (I presume it should be there?)<br/>
+				Also no cfg file, since there is no Examples dir in the existing /usr/share/docs/darkice dir.<br/>
+				<br/>
+				The exact output of the 'sudo dpkg' statement was this (differs from your example):<br/>
+				Selecting previously unselected package darkice.<br/>
+				(Reading database ... 62652 files and directories currently installed.)<br/>
+				Unpacking darkice (from .../darkice_1.0-999~mp3+1_armhf.deb) ...<br/>
+				Setting up darkice (1.0-999~mp3+1) ...<br/>
+				pi@raspberry $<br/>
+				<br/>
+				What is going wrong here ?<br/>
+				<br/>
+				Canyou shed some light in my darkness?<br/>
+				Kind regards,<br/>
+				Arnold
+			</p>
+		</li>
+
+		<li id="comment-35">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-31 18:20">on January 31, 2013 at 18:20</time>
+			<p>
+				Hi Arnold,<br/>
+				<br/>
+				to see the files of a package try:<br/>
+				<br/>
+				$ dpkg -L darkice<br/>
+				<br/>
+				<br/>
+				AFAIK the package does not ship a default configuration file.
+			</p>
+		</li>
+
+		<li id="comment-36">
+			<span class="comment-author">Arnold</span>
+			<time class="comment-time" datetime="2013-01-31 21:40">on January 31, 2013 at 21:40</time>
+			<p>
+				I found the reason: no tab nor space before the dh_auto_configure statement in debian/rules!<br/>
+				That was clearly not allowed. <br/>
+				<br/>
+				But right now it has recompiled (with the tab in debian/rules), and I expect it to work now. Building
+				gives way more output than the first try.<br/>
+				Builds successful, and after dpkg -i there is a /usr/bin/darkice and even an example.cfg !<br/>
+				Thanks for your time,<br/>
+				Arnold<br/>
+				<br/>
+				Btw: dpkg -L darkice yielded this (without the tab):<br/>
+				/.<br/>
+				/etc/defaults<br/>
+				/etc/defaults/darkice<br/>
+				/etc/init.d<br/>
+				/etc/init.d/darkice<br/>
+				/usr<br/>
+				/usr/bin<br/>
+				/usr/share<br/>
+				/usr/share/doc<br/>
+				/usr/share/doc/darkice<br/>
+				/usr/share/doc/darkice/changelog.gz<br/>
+				/usr/share/doc/darkice/copyright<br/>
+				/usr/share/doc/darkice/changelog.Debian.gz<br/>
+				/usr/share/doc/darkice/README.Debian<br/>
+				$<br/>
+				That was all.<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-37">
+			<span class="comment-author">Adrian yo9hzn</span>
+			<time class="comment-time" datetime="2013-02-03 11:31">on February 03, 2013 at 11:31</time>
+			<p>
+				Works great. At first i had a problem with choppy audio in, but this link solve my problem
+				http://wsprnet.org/drupal/node/3689 . All you have to do is change the usb speed to usb1.1 .
+			</p>
+		</li>
+
+		<li id="comment-38">
+			<span class="comment-author"><a href="http://NA" rel="external">JJ</a></span>
+			<time class="comment-time" datetime="2013-02-03 23:08">on February 03, 2013 at 23:08</time>
+			<p>
+				Great tutorial. Tried to implement this on a raspberry pi running Wheezy. However, I did the steps twice
+				(some of them more) and still get the same message.<br/>
+				<br/>
+				"DarkIce: AudioSource.cpp:122: trying to open ALSA DSP device without support compiled"<br/>
+				<br/>
+				Googling this error indicates that I compiled darkice without ALSA support. Is this possible? Isn't this
+				what the with-alsa-support flag is for?<br/>
+				<br/>
+				Thanks
+			</p>
+		</li>
+
+		<li id="comment-39">
+			<span class="comment-author">Gordon</span>
+			<time class="comment-time" datetime="2013-02-05 01:15">on February 05, 2013 at 01:15</time>
+			<p>
+				@JJ.... Sounds like you missed something (even if you did it all twice).. because I did this on a RasPi
+				with wheezy and darkice is working great. (I did not install icecast). I got that error before I added
+				the mp3 support (libmp3lame). be sure you copy the entire strings (they run off the screen) and have
+				done all updates using apt-get. GL
+			</p>
+		</li>
+
+		<li id="comment-40">
+			<span class="comment-author"><a href="http://starlifterdigital.com" rel="external">Benet
+				Hitchcock</a></span>
+			<time class="comment-time" datetime="2013-02-07 12:00">on February 07, 2013 at 12:00</time>
+			<p>
+				Thanks so much for all the work and great instructions! Rocking some Radiohead as I type.<br/>
+				<br/>
+				Peace,<br/>
+				Benet
+			</p>
+		</li>
+
+		<li id="comment-41">
+			<span class="comment-author">Tyler</span>
+			<time class="comment-time" datetime="2013-02-11 02:02">on February 11, 2013 at 02:02</time>
+			<p>
+				Hey again,<br/>
+				<br/>
+				Was able to get sound to come through using a mixer with phantom power. However, there is high amounts
+				of distortion when talking into the mic. I'm using an XLR to USB adapter and I think it is causing the
+				distortion (I tried every sample rate and messed with options in darkice.cfg for awhile). What kinds of
+				setups are you guys using to live stream to the raspberry pi usb input?<br/>
+				<br/>
+				Thanks!<br/>
+				Tyler
+			</p>
+		</li>
+
+		<li id="comment-42">
+			<span class="comment-author">Ognjen</span>
+			<time class="comment-time" datetime="2013-02-20 10:41">on February 20, 2013 at 10:41</time>
+			<p>
+				I have problem,when I type this<br/>
+				$ cd darkice-1.0/<br/>
+				I have this<br/>
+				bash: cd: darkice-1.0/ No such file directory<br/>
+				<br/>
+				What is a problem,please help me<br/>
+				<br/>
+				Thanks<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-43">
+			<span class="comment-author">Milos</span>
+			<time class="comment-time" datetime="2013-02-20 11:35">on February 20, 2013 at 11:35</time>
+			<p>
+				When i start darkice I got this<br/>
+				<br/>
+				Using config file: /etc/darkice.cfg<br/>
+				Darkice: AudioSource.cpp:122: trying to open ALSA DSP device without support compiled/hw>1,0 [0]<br/>
+				<br/>
+				What is this???????
+			</p>
+		</li>
+
+		<li id="comment-44">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-02-21 00:31">on February 21, 2013 at 00:31</time>
+			<p>
+				Ognjen, did you successfully fetch the darkice sources with<br/>
+				<br/>
+				$ apt-get source darkice<br/>
+				<br/>
+				Seems like something went wrong in this step.
+			</p>
+		</li>
+
+		<li id="comment-45">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-02-21 00:33">on February 21, 2013 at 00:33</time>
+			<p>
+				Milos, it looks like darkice was compiled without support for alsa. Check if you have installed all
+				suggested dependency packages.
+			</p>
+		</li>
+
+		<li id="comment-46">
+			<span class="comment-author">Ognjen</span>
+			<time class="comment-time" datetime="2013-02-21 22:44">on February 21, 2013 at 22:44</time>
+			<p>
+				AFTER<br/>
+				apt-get source darkice<br/>
+				I have this<br/>
+				E:you must put some `source` URis in your sources.list<br/>
+				<br/>
+				how to do that????
+			</p>
+		</li>
+
+		<li id="comment-47">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-02-21 23:17">on February 21, 2013 at 23:17</time>
+			<p>
+				Ognjen, did you follow the foregoing step to add a deb-src repository to your sources list at
+				/etc/apt/sources.list?<br/>
+				<br/>
+				Please try to follow the tutorial step by step. This should fix your problems. <br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-48">
+			<span class="comment-author">Im stuck</span>
+			<time class="comment-time" datetime="2013-02-23 02:50">on February 23, 2013 at 02:50</time>
+			<p>
+				pi@raspberry ~/src/darkice-1.0 $ dpkg-buildpackage -rfakeroot -uc -b<br/>
+				dpkg-buildpackage: source package darkice<br/>
+				dpkg-buildpackage: source version 1.0-999~mp3+1<br/>
+				dpkg-buildpackage: source changed by <br/>
+				dpkg-buildpackage: host architecture armhf<br/>
+				dpkg-source --before-build darkice-1.0<br/>
+				fakeroot debian/rules clean<br/>
+				debian/rules:4: *** missing separator. Stop.<br/>
+				dpkg-buildpackage: error: fakeroot debian/rules clean gave error exit status 2<br/>
+				<br/>
+				<br/>
+				So how do i fix this?
+			</p>
+		</li>
+
+		<li id="comment-49">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-02-27 23:37">on February 27, 2013 at 23:37</time>
+			<p>
+				Hi "Im stuck", this question has already been addressed in the comments above. See:
+				http://www.t3node.com/blog/live-streaming-mp3-audio-with-darkice-and-icecast2-on-raspberry-pi/#comment-24
+			</p>
+		</li>
+
+		<li id="comment-50">
+			<span class="comment-author">Kumar McMillan</span>
+			<time class="comment-time" datetime="2013-03-04 03:29">on March 04, 2013 at 03:29</time>
+			<p>
+				In case anyone else runs into this: I was getting nothing but silence when recording from my card. I was
+				testing like this:<br/>
+				<br/>
+				arecord -f S16_LE -d 20 -D plughw:1,0 record.wav<br/>
+				<br/>
+				I had to run alsamixer, select my sound card, press F4, and press page up to increase the line-in level.
+				Then darkice was was streaming the line input.
+			</p>
+		</li>
+
+		<li id="comment-51">
+			<span class="comment-author">Kumar McMillan</span>
+			<time class="comment-time" datetime="2013-03-04 07:12">on March 04, 2013 at 07:12</time>
+			<p>
+				My Creative Sound Blaster X-Fi Go! Pro would only play distorted until I switched back to USB 1.1. I put
+				this in my /boot/cmdline.txt to get it working:<br/>
+				<br/>
+				dwc_otg.speed=1<br/>
+				<br/>
+				Kinda lame though since that bumps USB speed down. Maybe I'm missing some drivers, I'm not sure.
+			</p>
+		</li>
+
+		<li id="comment-52">
+			<span class="comment-author">Michael M</span>
+			<time class="comment-time" datetime="2013-03-17 23:23">on March 17, 2013 at 23:23</time>
+			<p>
+				Hello. When I try to start darkice with aacp as format, I get the following error: "DarkIce not compiled
+				with AAC+ support, thus can't aacp stream: icecast2-0 [0]"<br/>
+				How can I compile it with aac+ support?
+			</p>
+		</li>
+
+		<li id="comment-53">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-03-18 20:31">on March 18, 2013 at 20:31</time>
+			<p>
+				Hi Michael M,<br/>
+				<br/>
+				could be that this is a bug in darkice. I found the following issue which seems to be related:<br/>
+				<a href="http://code.google.com/p/darkice/issues/detail?id=41">http://code.google.com/p/darkice/issues/detail?id=41</a><br/>
+				<br/>
+				Can you please rebuild the package and have a look, if the output of the <em>"configure"</em> part
+				contains: <em>"build with aacplus library"</em><br/>
+				<br/>
+				If you this output, than I'd say it's a bug which needs to be fixed in darkice and then backported to
+				the debian src package.<br/>
+				<br/>
+				If you get <em>"building without aacplus"</em> or <em>"not found, building without aacplus"</em>, then
+				you probably miss some package dependency. If you'd post the corresponding aacplus lines (please NOT the
+				complete output) I could have a look.<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-54">
+			<span class="comment-author">Michael M</span>
+			<time class="comment-time" datetime="2013-03-18 22:59">on March 18, 2013 at 22:59</time>
+			<p>
+				Hi Steffen. Thank you for the fast answer! These are the errors I get:<br/>
+				checking for faac library at /usr/lib/arm-linux-gnueabihf/ ... configure: WARNING: not found, building
+				without faac<br/>
+				checking for aacplus library at /usr/lib/arm-linux-gnueabihf/ ... configure: WARNING: not found,
+				building without aacplus<br/>
+				<br/>
+				How can that be fixed?
+			</p>
+		</li>
+
+		<li id="comment-55">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-03-26 00:53">on March 26, 2013 at 00:53</time>
+			<p>
+				Hi Michael M,<br/>
+				<br/>
+				you probably miss the libaacplus packages (and libfaac). Unfortunately they are not available in the
+				Raspbian distribution.<br/>
+				<br/>
+				You could instead install them from http://www.deb-multimedia.org/ Since this resource doesn't support
+				special builds for RasPi (aka hardfloat) chances are that you end up in performance problems while
+				encoding. But you should give it a try. After the installation you have to rebuild darkice as described
+				in the article above.<br/>
+				<br/>
+				I tried to, but darkice failed to compile with error<br/>
+				<em>aacPlusEncoder.h:45:30: fatal error: libaacplus/cfftn.h: No such file or directory</em><br/>
+				<br/>
+				I gave up since it would take too much time to debug and fix it.
+			</p>
+		</li>
+
+		<li id="comment-56">
+			<span class="comment-author">Michael M</span>
+			<time class="comment-time" datetime="2013-03-30 22:28">on March 30, 2013 at 22:28</time>
+			<p>
+				Hi Steffen!<br/>
+				Thank you very much. (Danke für die Mühe ;))
+			</p>
+		</li>
+
+		<li id="comment-57">
+			<span class="comment-author">Jason</span>
+			<time class="comment-time" datetime="2013-04-06 19:43">on April 06, 2013 at 19:43</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				Your tutorial is fantastic, much appreciated. <br/>
+				<br/>
+				One problem I've encounter though: Im using a headless RasPi on a hardwired ethernet connection and a
+				cheap USB sound card, but when I start streaming the audio I get this strange choppy/glitchy sound
+				(other than that, it would sound pretty good). I thought it might be the darkice.cfg or the
+				AlsaDspSource.cpp buffers - i tried increasing both by 5 secs, but no go. I also tried using 64kpbs,
+				varying sample rates, low quality, mono channel etc...am I missing something here?<br/>
+				<br/>
+				You're help would be much appreciated!
+			</p>
+		</li>
+
+		<li id="comment-58">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-04-09 11:16">on April 09, 2013 at 11:16</time>
+			<p>
+				Jason, the reason could be samplerate and alsa configuration. But I am not a pro when it comes to
+				hardware configuration and alsa, so I'd suggest you to ask google for help :)
+			</p>
+		</li>
+
+		<li id="comment-59">
+			<span class="comment-author"><a href="http://nothing" rel="external">Thierry</a></span>
+			<time class="comment-time" datetime="2013-04-27 17:54">on April 27, 2013 at 17:54</time>
+			<p>
+				Hello <br/>
+				<br/>
+				and congratulation for this work ,but i cant start Darkice...<br/>
+				<br/>
+				i have this :<br/>
+				Using config file: /etc/darkice.cfg<br/>
+				Using ALSA DSP input device: hw:1,0<br/>
+				DarKice: configSection.ccp 117: format missing in section icecast-0 [0] <br/>
+				<br/>
+				and no workink have you a idea ?<br/>
+				<br/>
+				Thank's and good week !<br/>
+				<br/>
+				Thierry<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-60">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-04-27 23:33">on April 27, 2013 at 23:33</time>
+			<p>
+				Hi Thierry,<br/>
+				<br/>
+				did you set "format" in your /etc/darkice.cfg file as shown in the example?<br/>
+<pre><code>[icecast2-0]
+...
+format = mp3
+...</code></pre>
+			<br/>
+			If setting format does not fix your issue, please post your darkice.cfg file to <a
+				href="http://pastebin.com">http://pastebin.com</a> or the like and add the link here. <br/>
+
+			</p>
+		</li>
+
+		<li id="comment-61">
+			<span class="comment-author"><a href="http://nothing" rel="external">Thierry</a></span>
+			<time class="comment-time" datetime="2013-04-28 12:43">on April 28, 2013 at 12:43</time>
+			<p>
+				Hello Steffen,<br/>
+				<br/>
+				And thank's for your speed respond,my .cfg is :<br/>
+				<br/>
+				# this section describes general aspects of the live streaming session<br/>
+				[general]<br/>
+				duration = 0 # duration of encoding, in seconds. 0 means forever<br/>
+				bufferSecs = 5 # size of internal slip buffer, in seconds<br/>
+				reconnect = yes # reconnect to the server(s) if disconnected<br/>
+				<br/>
+				# this section describes the audio input that will be streamed<br/>
+				[input]<br/>
+				device = hw:1,0 # OSS DSP soundcard device for the audio input<br/>
+				sampleRate = 44100 # sample rate in Hz. try 11025, 22050 or 44100<br/>
+				bitsPerSample = 16 # bits per sample. try 16<br/>
+				channel = 2 # channels. 1 = mono, 2 = stereo<br/>
+				<br/>
+				# this section describes a streaming connection to an IceCast2 server<br/>
+				# there may be up to 8 of these sections, named [icecast2-0] ... [icecast2-7]<br/>
+				# these can be mixed with [icecast-x] and [shoutcast-x] sections<br/>
+				[icecast2-0]<br/>
+				bitrateMode = vbr # average bit rate<br/>
+				format = mp3 # format of the stream: ogg vorbis<br/>
+				bitrate = 128 # bitrate of the stream sent to the server<br/>
+				server = yp.yourserver.com<br/>
+				# host name of the server<br/>
+				port = 8490 # port of the IceCast2 server, usually 8000<br/>
+				password = ******* # source password to the IceCast2 server<br/>
+				mountPoint = stream # mount point of this stream on the IceCast2 server<br/>
+				name = DarkIce trial<br/>
+				# name of the stream<br/>
+				description = This is only a trial<br/>
+				# description of the stream<br/>
+				url = http://www.yourserver.com<br/>
+				# URL related to the stream<br/>
+				genre = my own # genre of the stream<br/>
+				public = no # advertise this stream?<br/>
+				localDumpFile = recording.mp3 # local dump file<br/>
+				<br/>
+				Thank's Thierry
+			</p>
+		</li>
+
+		<li id="comment-62">
+			<span class="comment-author"><a href="http://www.julietmikebravo.nl" rel="external">Johan</a></span>
+			<time class="comment-time" datetime="2013-04-28 17:07">on April 28, 2013 at 17:07</time>
+			<p>
+				I have followed all the steps and compiled the binary. But after I install the package the binary is not
+				to be found:<br/>
+				<br/>
+				johan@raspberrypi ~/src/darkice-1.0 $ sudo dpkg -i ../darkice_1.0-999~mp3+1_armhf.deb<br/>
+				Selecting previously unselected package darkice.<br/>
+				(Reading database ... 62619 files and directories currently installed.)<br/>
+				Unpacking darkice (from .../darkice_1.0-999~mp3+1_armhf.deb) ...<br/>
+				Setting up darkice (1.0-999~mp3+1) ...<br/>
+				<br/>
+				When I try to tab complete I only get the existing commands, not darkice:<br/>
+				<br/>
+				johan@raspberrypi ~/src/darkice-1.0 $ da<br/>
+				dash date<br/>
+				<br/>
+				During compilation and installation of the package there are no critical errors whatsoever. What could I
+				be doing wrong?
+			</p>
+		</li>
+
+		<li id="comment-63">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-05-01 15:11">on May 01, 2013 at 15:11</time>
+			<p>
+				@Johan<br/>
+				<br/>
+				please see <a
+					href="http://www.t3node.com/blog/live-streaming-mp3-audio-with-darkice-and-icecast2-on-raspberry-pi/#comment-36">comment
+				#36</a>: the build will fail if debian/rules has spaces instead of tabs. <a href="/files/linux/rules">Download
+				the file</a><br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-64">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-05-01 15:47">on May 01, 2013 at 15:47</time>
+			<p>
+				@Thierry<br/>
+				<br/>
+				It seems your darkice.cfg is incomplete or wrong. Your posted configuration does not cause the error you
+				mentioned before:<br/>
+<pre><code>DarKice: configSection.ccp 117: format missing in section icecast-0 [0]</code></pre>
+			<br/>
+			<br/>
+			In your post, you have [icecast2-0] instead of icecast-0<br/>
+			<br/>
+			Please double check is you use the coorect cfg file. You could try to explicitly set it with:<br/>
+<pre><code>darkice -c /path/to/your/darkice.cfg</code></pre>
+			<br/>
+			<br/>
+			Also you the bitrateMode requires you to set bitrate or quality: <br/>
+			<br/>
+			If you use <br/>
+<pre><code>bitrateMode = vbr</code></pre>
+			<br/>
+			then you have to set quality instead of bitrate. So either you switch to something like:<br/>
+<pre><code>bitrateMode = cbr
+format = mp3
+bitrate = 128
+</code></pre>
+			<br/>
+			or:<br/>
+<pre><code>bitrateMode = vbr
+format = mp3
+quality = 0.6</code></pre>
+			<br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

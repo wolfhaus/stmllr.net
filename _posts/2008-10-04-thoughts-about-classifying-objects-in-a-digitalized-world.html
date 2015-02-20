@@ -1,0 +1,83 @@
+---
+layout: post
+title: Thoughts about classifying objects in a digitalized world
+date: 2008-10-04 12:36
+excerpt: While reading for my thesis, I found some interesting articles about order and hierarchies in the web. One central issue in a digitalized world is the question of how to classify objects.
+tags: 
+  - Classification
+  - Digitalization
+  - Networking
+---
+
+<section>
+	<p>Before thinking about classification in a digital environment, it might be useful to take a look at the good
+	old analog world. What's the difference between classification of objects in an analog and a digital world? When we
+	face a large quantity of objects, we tend to order them to keep track of the sheer complexity. One way to deal with
+	that, is to categorize things in a hierarchical order.
+	</p>
+
+	<p>For example, a friend of mine is collecting music records. He needs to order the records in his shelf to be able
+		to quickly find a particular album. He chose the following hierarchical order:
+	</p>
+	<pre> 1. Genre<br/> 2. Musician/Band name<br/> 3. Album name </pre>
+	<p>This kind of order is sufficient to find most of his albums. But from time to time, he has to face the situation
+		to be wary about which genre to choose for a new album. Dub, Reggae or Ska? The circumstance to decide in terms
+		of <i>either/or</i> pushes him into the uncomfortable situation of making more or less poor decisions.
+	</p>
+
+	<p>Now think about digitalizing all his records. The usual way to structure the digital copies is to save each song
+		as a single file on the harddisk. These files are being stored inside directories, which represent the band name
+		and/or the album name:
+	</p>
+	<pre>/Music/Bandname/Albumname/Songname.ogg</pre>
+	<p>What pops up here is the habit to maintain structures of the analog world when transforming content into a
+		digital form: A song belongs to a record and the record belongs to a band. This hierarchical paradigm seems to
+		be widespread on desktop computers, although it is not mandatory. One can just as well use a database instead of
+		a filesystem. In case of finding a certain song the represented file structure is not a limitation, because one
+		can add any meta information to a song he likes. For example, a genre can be assigned to a song by using an id3
+		tag. Based on this meta data, a music library software can crawl all directories and list all Reggae songs. We
+		even could assign more than a single genre, just like this blog article is tagged with multiple tags. No more
+		decision in terms of <i>either/or</i>, but in terms of <i>as-well-as</i>. That means more freedom in
+		classification and less misdeterminations caused by enforced <i>yes-or-no</i> decisions. In contrast to the
+		analog world, digital content can be separated from its mode of presentation. In combination with networking,
+		this opens a new kind of freedom when it comes to classify content. In particular, collaborate classification as
+		realized in so called folksonomies seems to be very helpful and popular.
+	</p>
+
+	<p>The other side of the coin is an increasing diffusion which may lead to disorientation. Human beings are heavily
+		bound to the rules of the analog world and used to its limitations. Simple models of classification help to
+		avoid uncertainty, even when they tend to cause wrong decisions. The challenge in a digitalized world is to make
+		use of collaborate forces against the increasing confusion in a&nbsp;complex world. Folksonomies as a
+		classification model seem to be a helpful step towards that. There might come a day when we have to skip using
+		hierarchical ordered files and folders, because this kind of categorization gets too complex for handling the
+		rapidly growing data.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-04-03 11:43">on April 03, 2009 at 11:43</time>
+			<p>
+				If you are interested in some more details, have a look at the <a href="http://rffr.de/bachelor"
+																				  class="external-link"
+																				  title="Thesis publication by Robert Freund">bachelor
+				thesis about 'File Systems and Usability - the Missing Link' by Robert Freund</a><br/>
+				<br/>
+				He also provides a proof-of-concept called <a href="http://rffr.de/nhfs"
+															  title="NHFS description and download"
+															  class="external-link">NHFS (nonhierarchical file
+				system)</a>. It demonstrates how such a file system could work and is implemented in user space with
+				FUSE on Linux.<br/>
+				<br/>
+				Thanks to <a href="http://www-lehre.inf.uos.de/~ifrost/www.coolfrost.de/index.html"
+							 class="external-link" title="Homepage of Ingo Frost">Ingo Frost</a> for pointing this out.
+			</p>
+		</li>
+
+	</ol>
+</section>

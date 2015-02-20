@@ -1,0 +1,103 @@
+---
+layout: post
+title: Testing the forthcoming TYPO3 caching framework with memcached
+date: 2008-12-04 00:42
+excerpt: I just did some quick tests with the forthcoming caching framework of TYPO3. The results were surprising, although not the way I did expect.
+tags: 
+  - TYPO3
+  - Caching
+  - Performance
+  - Memcached
+---
+
+<section>
+	<p> The caching framework was backported from FLOW3 for the forthcoming 4.3 release. The first commited version had
+		some issues with memcached, so I decided to wait for a full working version.</p>
+
+	<p><img alt="Engine" title="Diesel power" src="/files/images/engine.jpg" width="250" height="175"/></p>
+
+	<p>Dmitry fixed the issues some days ago and <a
+			href="http://typo3bloke.net/post-details/how_to_enable_memcached_cache_in_typo3_43/"
+			title="Blog posting by Dmitry Dulepov" class="external-link">posted a small howto</a> in his blog on using
+		memcache as a caching backend for TYPO3 pagecache.
+	</p>
+
+	<p>Today, I tried to see how it works. The setup for TYPO3 was really easy and it worked without any problems.
+		Installing memcached and php module on Debian was a nobrainer, so no time was wasted.
+	</p>
+
+	<p>But my first tests were a bit disappointing. First, I used memcached on a lightweight virtualbox and the gain of
+		using memcached instead of DB tables for cache_* &quot;tables&quot; was zeeeeero:
+	</p>
+	<pre> ab -c 100 -n 5000 http ://virtual.box.test/ </pre>
+	<p>The tests revealed ridiculous <b>8 req/s</b> (mean) both using DB tables and memcached for caching. I realized,
+		that the CPU could have been the bottleneck, because it immediately went to 100%. My conclusion was that the
+		virtual box was too lame to get significant results. So I decided to switch to a real machine.
+	</p>
+
+	<p>I decided to use an AMD BE-2350 machine for further tests.
+	</p>
+	<pre> ab -c 100 -n 5000 http ://physical.box.test/ </pre>
+	<p>The same basic tests with ApacheBench resulted in overall better performance and a slightly difference between
+		memcached <b>(170 req/s</b>) and classic caching (<b>135 req/s</b>). But still not the boost I had expected.
+		Once again looking at the CPU load, it was 100%. Most load was caused by fcgid and mysql, but I couldn't do any
+		further tests because midnight cronjobs started and I did'nt want to stop them.
+	</p>
+
+	<p>The next step will be to replay the tests on a machine using mod_php instead of fcgid. But I'm also looking
+		forward for some more reports from the community to crosscheck my own results.
+	</p>
+
+	<p>Anyway, the backport of the caching framework is very good work. It spends hope to have a smooth migration path
+		to FLOW3 and TYPO3 v.5. So a big <b>thank you</b> goes out to core devs for their efforts.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://www.ingo-renner.com" rel="external">Ingo</a></span>
+			<time class="comment-time" datetime="2009-02-05 12:08">on February 05, 2009 at 12:08</time>
+			<p>
+				would be interesting to know about your test settup...
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-02-05 20:17">on February 05, 2009 at 20:17</time>
+			<p>
+				Ingo, once I find some time, I'll test it again and provide more details about setup.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Christian</span>
+			<time class="comment-time" datetime="2010-12-21 22:48">on December 21, 2010 at 22:48</time>
+			<p>
+				The extension enetcacheanalytics (forge) comes with a backend module to compare the different caching
+				framework backends. I need to get it up-to-date again, but it should still be able to create some
+				graphics about the different backends in direct comparison under different loads.
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-12-22 00:36">on December 22, 2010 at 00:36</time>
+			<p>
+				Thanks for your feedback, Christian.<br/>
+				<br/>
+				This article was written on very basic assumtions. The underlying usecase is just a simple setup,
+				compared to the many different possibilities of the caching framework.<br/>
+				I also agree that ab is not the best tool for measuring performance. It was just a quick shot to get my
+				hands on the caching framework for the first time.<br/>
+				So I am looking forward to see how enetcacheanalytics does the job. <br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

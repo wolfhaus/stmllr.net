@@ -1,0 +1,44 @@
+---
+layout: post
+title: How to link to a file in a FE plugin of TYPO3?
+date: 2008-11-24 20:49
+excerpt: This short snippet demonstrates the essentials of how to create links to files in FE plugins. It reveals the power of cObjects and TypoScript. This technique is typical for TYPO3 and it shows you why TYPO3 can be so amazing.
+tags: 
+  - TYPO3
+  - Extension development
+  - Filelink
+  - cObject
+  - TypoScript
+  - Snippet
+  - FE plugin
+---
+
+<section>
+	<p>This posting is not meant as a tutorial shipping complete sources, but a snippet to give you an impression of the
+		essentials. So don't be disappointed if you won't find some ready-to-paste snippets.
+	</p>
+
+	<p>The idea is to create a link to a file, which is set in the media field of the page. You can find this field in
+		the page properties below the ressources tab and its label in the backend is &quot;Files&quot;.
+	</p>
+
+	<p>Once you have chosen the file in the backend, it gets copied to the uploads/media/ directory. In the plugin, we
+		need to get the filename and then simply build a link around it. &quot;That's easy&quot;, you might think,
+		&quot;just get the filename from TSFE and put some a href tag around it and it's finished&quot;. But as this
+		snippet will show, you don't need to think about HTML at all. The magic lies inside the <a
+				href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.1.0/view/5/13/"
+				title="filelink function reference in TSref" class="external-link">filelink function</a> of TypoScript.
+	</p>
+	<pre>// path to the file<br/>$filePath = 'uploads/media/'.$GLOBALS['TSFE']-&gt;page['media'];<br/>// use the filelink function to create a rich feature link<br/>$content = $this-&gt;cObj-&gt;filelink(<br/>  $filePath,<br/>  $this-&gt;conf['fileLink.']<br/>); </pre>
+	<p>This is only a few lines of PHP code! Next we need to configure the filelink with in the TypoScript setup of the
+		plugin:
+	</p>
+	<pre>plugin.tx_myplugin_pi1 {<br/>&nbsp; fileLink {<br/>&nbsp;&nbsp;&nbsp; file.noTrimWrap = | | |<br/>&nbsp;&nbsp;&nbsp; labelStdWrap.data = page:media<br/>&nbsp;&nbsp;&nbsp; icon = 1<br/>&nbsp;&nbsp;&nbsp; icon_link = 1<br/>&nbsp;&nbsp;&nbsp; size = 1<br/>&nbsp;&nbsp;&nbsp; size.wrap = (|)<br/>&nbsp;&nbsp;&nbsp; size.bytes = 1<br/>&nbsp;&nbsp;&nbsp; size.bytes.labels = &quot; B| KB| MB| GB&quot;<br/>&nbsp; }<br/>}</pre>
+	<p>The result is a full featured link with an icon corresponding to the content type and the size of the file:
+	</p>
+
+	<p><img src="/files/examples/demo.png" alt=""/>
+	</p>
+</section>
+
+{% include post-taglist.html %}

@@ -1,0 +1,29 @@
+---
+layout: post
+title: Creating a diff of OpenOffice .odt documents on the command-line
+date: 2008-12-07 21:42
+excerpt: I just found a little easter egg to create diffs of OpenOffice.org documents (*.odt) on the command-line.
+tags: 
+  - OpenOffice.org
+  - Diff
+  - Subversion
+---
+
+<section>
+	<p>
+		All you need to have the following two new tools:</p>
+	<ol>
+		<li><a href="http://stosberg.net/odt2txt/" title="Project homepage (in german only)" class="external-link">odt2txt</a>
+			for extracting the content of an OpenOffice.org document. (A Debian package is available)
+		</li>
+		<li><a href="http://www-verimag.imag.fr/~moy/opendocument/" title="Creating diffs with opendocument files"
+			   class="external-link">oodiff</a> for comparing the content.
+		</li>
+	</ol>
+	<p>The real easter egg is that you can compare your local copy with the latest subversion revision. Well, oodiff
+		does not really connect to subversion, but uses a local copy of the .svn directory. Git and Mercurial are also
+		supported.
+	</p>
+</section>
+
+{% include post-taglist.html %}

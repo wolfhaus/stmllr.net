@@ -1,0 +1,46 @@
+---
+layout: post
+title: Conditions and dynamic values in TCA fields of TYPO3 
+date: 2009-06-20 18:11
+excerpt: TYPO3 backend and TCA simetimes appear a bit old school. Fields and values are less flexible like you are used to in recent AJAX applications. How to make them more flexible without heavy JS frameworks like ExtJS?
+tags: 
+  - TYPO3
+  - TCA
+  - Backend
+  - itemsProcFunc
+---
+
+<section>
+	<p> The first thing that I found was the dynaflex extension. It allows to add new fields dynamically based on
+		conditions. Anyway I found a quick&amp;dirty solution, which looked more confident for the tiny task I had to
+		solve:
+	</p>
+
+	<p>The problem was to have dynamic values in the frames (section_frame) field of content elements, depending on the
+		value of the column (colPos) field. If normal column was choosen, frames should offer value 80 and 81. If right
+		column was choosen, frames should offer 82 and 83.
+	</p>
+
+	<p>The first thing I did was to add colPos to the list of fields, which trigger saving and reloading the content
+		element on change. I kickstarted a new extension and added these lines to extTables.php:
+	</p>
+	<pre>$updateFields = t3lib_div::trimExplode(',', $TCA['tt_content']['ctrl']['requestUpdate']);<br/>if (in_array('colPos', $updateFields)) {<br/>  $TCA['tt_content']['ctrl']['requestUpdate'] .= ',colPos';<br/>} </pre>
+	<p>Then I changed the TCA of section_frame to use itemsProcFunc to customize its items:
+	</p>
+	<pre>$TCA['tt_content']['columns']['section_frame']['config']['items'] = array();<br/>$TCA['tt_content']['columns']['section_frame']['config']['itemsProcFunc'] = 'tx_myext_setsectionframeitems-&gt;main';<br/>if (TYPO3_MODE == 'BE') {<br/>&nbsp; include_once(t3lib_extMgm::extPath($_EXTKEY).'class.tx_myext_setsectionframeitems.php');<br/>} </pre>
+	<p>Next step was to implement the class, which controls the items. The class itself was stored in a seperate file
+		called class.tx_myext_setsectionframeitems.php:
+	</p>
+	<pre>class tx_myext_setsectionframeitems {<br/>&nbsp; function main(&amp;$params, &amp;$pObj)&nbsp;{<br/>&nbsp;&nbsp;&nbsp; global $LANG;<br/>&nbsp;&nbsp;&nbsp; $selectOptions = array();<br/><br/>&nbsp;&nbsp; // Allowed fields for normal column<br/>&nbsp;&nbsp;&nbsp; $normalFields = array(<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $LANG-&gt;sL(&quot;LLL:EXT:myext/locallang_tca.xml:tt_content.section_frame.I.80&quot;) =&gt; 80,<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $LANG-&gt;sL(&quot;LLL:EXT:myext/locallang_tca.xml:tt_content.section_frame.I.81&quot;) =&gt; 81<br/>&nbsp; &nbsp;&nbsp; );<br/>&nbsp;&nbsp;&nbsp; // Allowed fields for right column<br/>&nbsp;&nbsp;&nbsp; $rightFields = array(<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $LANG-&gt;sL(&quot;LLL:EXT:myext/locallang_tca.xml:tt_content.section_frame.I.82&quot;) =&gt; 82,<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $LANG-&gt;sL(&quot;LLL:EXT:myext/locallang_tca.xml:tt_content.section_frame.I.83&quot;) =&gt; 83<br/>&nbsp;&nbsp;&nbsp; );<br/>&nbsp;&nbsp;&nbsp; // Get value of tt_content.colPos<br/>&nbsp;&nbsp;&nbsp; $key = key($pObj-&gt;cachedTSconfig);<br/>&nbsp;&nbsp;&nbsp; $colPos = $pObj-&gt;cachedTSconfig[$key]['_THIS_ROW']['colPos'];<br/>&nbsp;&nbsp;&nbsp; // Add items<br/>&nbsp;&nbsp;&nbsp; if ($colPos == 2) {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $selectOptions = $rightFields;<br/>&nbsp;&nbsp;&nbsp; } else {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $selectOptions = $normalFields;<br/>&nbsp;&nbsp;&nbsp; }<br/>&nbsp;&nbsp;&nbsp; foreach ($selectOptions as $key =&gt; $value) {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $params['items'][] = array(<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $key,<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $value<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br/>&nbsp;&nbsp;&nbsp; }<br/>&nbsp; }<br/>}<br/><br/>if (defined('TYPO3_MODE') &amp;&amp; $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/myext/class.tx_myext_setsectionframeitems.php'])&nbsp; {<br/>&nbsp; include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/myext/class.tx_myext_setsectionframeitems.php']);<br/>} </pre>
+	<p>The custom labels were stored in a usual locallang file.
+	</p>
+
+	<p>Finally, I did some TSconfig tuning in extTables.php to prevent invalid field values:
+	</p>
+	<pre>t3lib_extMgm::addPageTSConfig('<br/> &nbsp;&nbsp;TCEFORM.tt_content.section_frame.disableNoMatchingValueElement = 1<br/>'); </pre>
+	<p>That's it. The whole stuff looks a bit ugly to me. So if you know a smarter solution, I'd be glad if you leave a
+		comment.
+	</p>
+</section>
+
+{% include post-taglist.html %}

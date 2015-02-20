@@ -1,0 +1,106 @@
+---
+layout: post
+title: No eAccelerator package for Debian Etch?
+date: 2007-06-28 21:50
+excerpt: Two years after the release of "Sarge", we face the next Debian release called "Etch". Finally, Debian ships PHP 5, MySQL 5, Apache 2.2, ... but still NO eAccelerator package. No need to worry, you'll always find a package somewhere in the web...
+tags: 
+  - Debian
+  - eAccelerator
+---
+
+
+<section>
+	<p>Etch includes more than 18000 packages - why is eAccelerator missing? Well, the licence of eAccelerator somehow
+		seems not to be compatible with the Debian policy. I did not really find out why, but found an <a
+				href="http://archive.eaccelerator.net/OldNews" title="Old and archived eAccelerator project website"
+				class="external-link">&quot;old news&quot;</a> about failed negotiations between the developers of
+		eAccelerator and &quot;Mr. Turck&quot;, who &quot;owns&quot; parts of the copyright (eAccelerator is a fork of
+		<a href="http://turck-mmcache.sourceforge.net/index_old.html"
+		   title="The Turck MMcache project seems to be inactive since 2003" class="external-link">Turck MMcache</a>).
+	</p>
+
+	<p>Fortunately, Andrew McMillan provides a fresh <a href="http://andrew.mcmillan.net.nz/node/70"
+														title="Andrew McMillan announces a fresh eAccelerator package for Etch"
+														class="external-link">eAccelerator package</a> for Etch. There
+		have been some questions on the TYPO3-Debian mailing list about installing third party packages on Debian Linux.
+		To clearify things, here comes a quick installation guide.
+	</p>
+
+	<p>You need to import Andrews public key, because Etch now comes with <a href="http://wiki.debian.org/SecureApt"
+																			 title="validation of software packages with apt"
+																			 class="external-link">signed packages</a>
+		and apt-get could complain about unverified signatures of 3rd party software.
+	</p>
+	<pre>gpg --keyserver pgp.mit.edu --recv-keys 8F068012<br/>gpg --armor --export 8F068012&nbsp; | apt-key add -</pre>
+	<p>Ok. Now add the repository to your apt sources.
+	</p>
+	<pre>echo 'deb http://debian.mcmillan.net.nz/debian etch awm' \<br/>&gt;&gt; /etc/apt/sources.list</pre>
+	<p> Update your list of packages and install the eAccelerator module.
+	</p>
+	<pre>aptitude update <br/>aptitude install php5-eaccelerator </pre>
+	<p>You need to activate the module in /etc/php5/{cgi|apache|apache2}/conf.d/eaccelerator.ini by uncommenting the
+		last line:
+	</p>
+	<pre>extension=eaccelerator.so </pre>
+	<p>If you use PHP5 via FastCGI/fcgid and Apache2 worker, it is <a
+			href="http://eaccelerator.net/wiki/InstallFromSource" title="Installation guide to build eAccelerator"
+			class="external-link">recommended</a> to use eAccelerator as an extension of the Zend engine. Replace the
+		above line with:
+	</p>
+	<pre>zend_extension=&quot;/usr/lib/php5/20060613+lfs/eaccelerator.so&quot; </pre>
+	<p>Finally, reload Apache
+	</p>
+	<pre>/etc/init.d/apache2 force-reload </pre>
+	<p>Use phpinfo() to check if eAccelerator is activated. Note that php-cli is not supported by eAccelerator.
+	</p>
+	<pre>&lt;?php phpinfo(); ?&gt;</pre>
+</section>
+
+{% include post-taglist.html %}
+
+
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+		<li id="comment-1">
+			<span class="comment-author">Peter</span> <time class="comment-time" datetime="2007-12-26 23:00">on December 26, 2007 at 23:00</time>
+			<p>
+				Nice article. Tried it with LigHTTPD and FastCGI. Works like a charm.<br />
+<br />
+Thank you!!!
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://underused.org" rel="external">Michael</a></span> <time class="comment-time" datetime="2008-01-09 22:32">on January 09, 2008 at 22:32</time>
+			<p>
+				Andrew has just updated to the newest Etch PHP version, but it took some time (and apparently the PHP updates are not binary compatible). So instead of waiting, you can just build the packages with deb-src, which has worked perfectly for me on AMD64.<br />
+<br />
+http://andrew.mcmillan.net.nz/node/70#comment-266
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author"><a href="http://www.zirona.com/" rel="external">Alex</a></span> <time class="comment-time" datetime="2008-02-19 18:01">on February 19, 2008 at 18:01</time>
+			<p>
+				Thanks for the nice howto.<br />
+<br />
+There is a little bug where it says to add the repository to sources.list, there is a http:// missing. Without that, apt-get update will complain.
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span> <time class="comment-time" datetime="2009-10-26 18:51">on October 26, 2009 at 18:51</time>
+			<p>
+				One hint about unit tests and TYPO3:<br />
+<br />
+eAccelerator can strip comments, like @test. But these comments are mandatory for some unit tests to work (like those in Extbase of TYPO3: http://bugs.typo3.org/view.php?id=12347)<br />
+<br />
+To make sure that unit tests work properly, you have to build eAccelerator with the option:<br />
+<br />
+--with-eaccelerator-doc-comment-inclusion<br />
+
+			</p>
+		</li>
+	</ol>
+</section>

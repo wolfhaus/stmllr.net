@@ -1,0 +1,40 @@
+---
+layout: post
+title: Broken pdfinfo shipped with Zotero [fixed]
+date: 2007-10-10 14:16
+excerpt: To index and search PDF files within Zotero, you need the Xpdf tool pdfinfo.  As it seems that most versions of pdfinfo are either not compatible with Zotero or broken otherwise, I decided to build it from scratch and provide it for download.
+tags: 
+  - Zotero
+  - Bugs
+  - Reference management
+---
+
+<section>
+	<p>Somehow Zotero needs a slightly customzied version of pdfinfo, which is only available for download via the
+	Zotero configuration dialog. Unfortunately, the actual version seems to be <a
+			href="http://forums.zotero.org/discussion/1386/pdfinfolinuxi686-broken-on-ubuntu-edgy/"
+			title="Bug report about broken pdfinfo version" class="external-link">broken on some systems</a> (e.g.
+	Ubuntu Edgy). Therefore, I compiled pdfinfo by myself. You can download the binary if you experience similar
+	problems (no warranty, use at your own risk!):</p>
+	<ul>
+		<li><a href="/files/zotero/pdfinfo-Linux-i686.gz" title="Initiates file download" class="download">pdfinfo</a>
+			binary (gzipped, version 3.02)
+		</li>
+		<li><a href="/files/zotero/xpdf-3.02.tar.gz" title="Initiates file download" class="download">Xpdf sources</a>
+			as tar.gz archive (version 3.02)
+		</li>
+		<li><a href="/files/zotero/pdfinfo.cc" title="Initiates file download" class="download">pdfinfo.cc</a> source
+			file, modificated by zotero dev, see <a href="https://www.zotero.org/trac/browser/tools/xpdf/pdfinfo.cc"
+													title="Browse the source file via trac /svn" class="external-link">Zotero
+				svn</a></li>
+	</ul>
+	<p>[UPDATE 2007/10/11]
+	</p>
+
+	<p>The bug is already fixed and new binaries are provided. Nevertheless, if you still run into the described
+		problems, it might be because the old file still exists in the Firefox cache. Clear the cache or alternatively
+		get the file from:<br/>http://www.zotero.org/download/xpdf/pdfinfo-Linux-i686-3.02
+	</p>
+</section>
+
+{% include post-taglist.html %}

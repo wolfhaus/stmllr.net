@@ -1,0 +1,213 @@
+---
+layout: post
+title: Report from the TYPO3 Freiburg code sprint 
+date: 2012-07-24 22:25
+excerpt: Insprired by previous code sprints, the TYPO3 community in Freiburg, Germany decided to organize a local code sprint. From Friday, July 13th to Sunday, July 15th ten TYPO3 developers met for a code sprint. After all it was a great success for the TYPO3 project. 
+tags: 
+  - TYPO3
+  - Freiburg
+  - Community
+  - Core
+  - Logging
+---
+
+<section>
+	<h3>Participants</h3>
+
+	<p>The original idea was a local code sprint with participants from Freiburg. But fortunately the event attracted
+		also participants from other regions.
+	</p>
+
+	<p><img title="TYPO3 Codesprint Freiburg Team from Saturday" src="/files/images/typo3-freiburg-codesprint-team.jpg"
+			height="538" width="870" alt=""/></p>
+	<ul>
+		<li>Steffen Gebert</li>
+		<li>Nico de Haen</li>
+		<li>Johannes Klug</li>
+		<li>Thomas Maroschik</li>
+		<li>Steffen Müller</li>
+		<li>Hans Christian Reinl</li>
+		<li>Ingo Renner</li>
+		<li>Ingmar Schlecht</li>
+		<li>Fabien Udriot</li>
+		<li>Andreas Wolf</li>
+	</ul>
+	<h3>Topics</h3>
+
+	<p>We worked in teams of 2-3 people on the following topics:</p>
+	<ul>
+		<li>TYPO3 Logging</li>
+		<li>sys_collection and sys_categories</li>
+		<li>File Abstraction Layer (FAL)</li>
+		<li>Extension- and Package-Builder</li>
+		<li>PHP class refactorer / Refactoring class names in TYPO3</li>
+	</ul>
+	<h3>Goals and Results</h3>
+	<h4>Logging</h4>
+
+	<p>The <a href="http://forge.typo3.org/projects/typo3v4-logging/wiki" title="Refactoring TYPO3 Logging">Logging
+		project </a>overall goals are:</p>
+	<ul>
+		<li>streamline the existing Logging with a single logging API,</li>
+		<li>optimize/redesign the user interface of the Log module,</li>
+		<li>create and maintain suitable documentation for the different target groups</li>
+		<li>cleanup logging configuration</li>
+	</ul>
+	<p>The code sprint goal for Logging was to bring the new Logging API on its way into TYPO3 core by pushing it to&nbsp;the
+		<a href="http://review.typo3.org/">Gerrit&nbsp;review</a> system.<br/>Ingo, Steffen Gebert and Steffen Müller
+		discussed, optimized, tested,&nbsp;and reviewed this&nbsp;new API for the TYPO3 core. The decision was to
+		deliver good quality, including high unit test coverage, documentation,&nbsp;and a demo extension, before the
+		API is going to be pushed to&nbsp;Gerrit. So far we have ~70% unit test coverage. The documentation, the new log
+		module,&nbsp;and the demo extension are still work in progress. As soon as these tasks are completed, things
+		will enter gerrit. This is planned before the release of 6.0.0-beta1. Stay tuned!
+	</p>
+
+	<p><img title="BE log module" src="/files/images/typo3-log-module.png" height="277" width="680" alt=""/>
+	</p>
+	<h4>sys_collection and sys_categories</h4>
+
+	<p>A common use case in every advanced website is to be able to categorize records. Besides that, there is the need
+		to share categories across records. So far, each extension had to bring its own category implementation which
+		was not an ideal situation.
+	</p>
+
+	<p>To fill the gap, a new category record type was introduced along with an API where extension developers can
+		register their own tables to be categorized. The relations get stored within &quot;mm&quot; tables as a less
+		time consuming approach. In the code sprint, Fabien continued to work on this topic and it was <a
+				href="http://git.typo3.org/TYPO3v4/Core.git?a=commit;h=b5ba81a8fd9d33e8dfd0346f97db7e2f1997b0f4">merged
+			into the core</a> on friday&nbsp;
+	</p>
+	<h4>File Abstraction Layer (FAL)</h4>
+
+	<p>The goal in the FAL department was to create a possibility to extend FAL by additional fields. The concept of
+		Property Bags has been implemented, which enables extensions to ship additional file properties in so called
+		&quot;bags&quot; of properties. Independent of the bag definition, separate services to extract meta information
+		(such as exif data) out of files are used to actually determine the values of the property bags in the case of
+		automatically detected information. It is planned - though not yet implemented - to create a compatibility layer
+		between the old DAM meta data extraction services and the new architecture. In general, good progress on the
+		issue has been made during the code sprint, but further work is still necessary, which Andreas and Ingmar will
+		follow up on during the coming weeks.
+	</p>
+	<h4>Extension- and Package-Builder</h4>
+
+	<p>The&nbsp;team&nbsp;aimed to&nbsp;continue the modeler and the backend code creation of the PackageBuilder and to
+		migrate the ExtensionBuilder classes.&nbsp;The PackageBuilder can now render file content based on Fluid
+		Templates and create the directory structure and the resulting files. Besides that the refactoring was started
+		to be independant of the current framework context. The Modeller based on <a
+				href="http://jsplumb.org/">jsPlumb</a> was integrated in PackageBuilder to create domain-objects with
+		properties which interact with the user-interface of the TYPO3.Ice-package. It's also possible to define
+		relations between different domain-objects. The modeller can be found on <a
+				href="https://github.com/drublic/TYPO3.PackageBuilder">GitHub</a>.
+	</p>
+
+	<p><img title="ExtensionBuilder Modeller" src="/files/images/typo3-extensionBuilder-modeller.png" height="396"
+			width="792" alt=""/>
+	</p>
+	<h4>PHP class refactorer / Refactoring class names in TYPO3</h4>
+
+	<p>The stated aim was to continue&nbsp;the concept and implementation of a refactorer for PHP&nbsp;classes.&nbsp;The
+		tool already left the proof of concept state and is able to refactor class names and references to class names.
+		Further it can introduce, change and remove namespaces. It aims to be a central part of all forward- and
+		backporting demands including automated code migrations. Based upon a modified PHPParser the refactorer will
+		also be used extensively by the new Package- and ExtensionBuilder. The current progress is visible at <a
+				href="https://github.com/tmaroschik/TYPO3.Zubrovka/">GitHub</a>.
+	</p>
+
+	<p>As a sideproject a vibrant discussion&nbsp;was started by Tom and&nbsp;is ongoing,&nbsp;if many TYPO3v6 class
+		names could be cleaned up and clarified.
+	</p>
+
+	<h3>Next steps</h3>
+	<h4>Logging</h4>
+
+	<p>Once the Logging API was merged, we will start to replace the existing logging functions/calls with the new API.
+		Beside that, we will write and publish extensions to provide&nbsp;additional LogWriters&nbsp;(e.g. to email,
+		Graylog2)&nbsp;and&nbsp;LogProcessors&nbsp;(additional system information)&nbsp;and finish the Backend module.
+	</p>
+	<h4>sys_collection and sys_categories</h4>
+
+	<p>We have to create some buzz to demonstate the categorization feature and hopefully will see a growing number of
+		extensions adapting it. A category tree could be build based on the page tree.
+	</p>
+	<h4>Extension Builder</h4>
+
+	<p>The next steps for the Modeller are refining the behavior of relations and domain-objects and their interaction
+		with other parts of the PackageBuilder.
+	</p>
+	<h4>Refactoring class names in TYPO3</h4>
+
+	<p>After the PHPParser has reached a stable state, it will replace the regex based class parser in the Package- and
+		ExtensionBuilder. We will take the chance of the 6.0 release and try to clean up TYPO3 class names using the
+		PHPParser. A discussion about that is going on in the TYPO3 core-mailinglist.
+	</p>
+
+	<h3>Community spirit</h3>
+
+	<p>The event was a great success. We had a lot of fun spending our time on the TYPO3 project. Working in teams and
+		meeting developers was very motivating and increased productivity. We hope to see more code sprints in the
+		future.
+	</p>
+
+	<h3>Thanks to our sponsors</h3>
+
+	<p>We are very happy that all expenses were covered by our sponsors. This once again proved that the TYPO3 project
+		is run by real community players.
+	</p>
+
+	<p>Thanks to:</p>
+	<ul>
+		<li><a href="http://association.typo3.org/">TYPO3 Association</a> for covering&nbsp;travel costs</li>
+		<li><a href="http://jweiland.net/" title="TYPO3 Hosting">jweiland.net</a>&nbsp;for sponsoring the food for three
+			days and the social event
+		</li>
+		<li><a href="http://gebruederheitz.de/" title="TYPO3 Agentur aus Freiburg">/gebrüderheitz</a>&nbsp;for the
+			location and all drinks
+		</li>
+		<li><a href="http://www.ndh-websolutions.de/" title="TYPO3 Freelancer aus Freiburg">ndh-websolutions</a>&nbsp;and
+			<a href="http://www.maria-mueller.de/">Maria Müller Übersetzungen</a>&nbsp;for accommodation
+		</li>
+		<li><a href="http://www.dkd.de/">dkd internet Service</a>&nbsp;for the day off for Ingo</li>
+		<li>Volker Graubaum from <a href="http://www.e-net.info/">e-net Consulting</a>&nbsp;for the spontaneously taking
+			over the BBQ costs
+		</li>
+		<li><a href="http://www.t3node.com/" title="TYPO3 Entwickler aus Freiburg">Steffen Müller</a>&nbsp;for
+			organization
+		</li>
+		<li><a href="http://twitter.com/robert_we">Robert Weißgraeber</a>&nbsp;for offering clubmate/beer, which we
+			didn't drink in the end
+		</li>
+	</ul>
+	<h3>What about you?</h3>
+
+	<p>Are you interested in participating in a future code sprint
+	</p>
+
+	<p>Here is a list with dates and topic of forthcoming sprints:&nbsp;<a
+			href="http://typo3.org/news/article/code-sprints-for-typo3-60/">http://typo3.org/news/article/code-sprints-for-typo3-60/</a>.&nbsp;In
+		addition to that, there's a <a href="http://wiki.typo3.org/Code_Sprint_Stuttgart_2012">bugfixing sprint in
+			Stuttgart</a> from Friday, August 31 to Sunday, September 2.
+	</p>
+
+	<p>Do you even like to organize a code sprint by yourself? It's not rocket science. We have set up a wiki page to
+		support you in organizing your sprint: <a href="http://wiki.typo3.org/Howto_Organize_Code_Sprints">http://wiki.typo3.org/Howto_Organize_Code_Sprints</a>
+	</p>
+
+	<h3>Resources</h3>
+	<ul>
+		<li><a href="http://typo3.org/news/article/code-sprint-freiburg-report/" title="News on typo3.org"
+			   class="external-link">The original report on typo3.org</a></li>
+	</ul>
+</section>
+
+<section>
+	<h3>Related articles</h3>
+	<ul>
+		<li><a href="/blog/2012-11-14-summary-of-the-typo3-packagebuilder-code-sprint-in-freiburg.html">Summary of the
+			TYPO3 PackageBuilder code sprint in Freiburg</a> (
+			<time>November 14, 2012</time>
+			)
+		</li>
+	</ul>
+</section>
+
+{% include post-taglist.html %}

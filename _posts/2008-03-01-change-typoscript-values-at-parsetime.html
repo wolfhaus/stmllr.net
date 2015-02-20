@@ -1,0 +1,92 @@
+---
+layout: post
+title: Change Typoscript values at parsetime
+date: 2008-03-01 17:38
+excerpt: Typoscript properties in the CONFIG section are usually defined once and at a certain point. But what if you have defined the value of a property at some place and like to add another one later in the parsing process? 
+tags: 
+  - TypoScript
+  - TYPO3
+---
+
+<section>
+	<h3>Example</h3>
+
+	<p>A prominent example is <a
+			href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.1.0/view/7/3/"
+			title="read the property description in TSref documentation at typo3.org" class="external-link">config.linkVars</a>.
+		In most cases, it's used to append the global language parameter <em>L</em> to typolinks:
+	</p>
+	<pre>config.linkVars = L</pre>
+	<p> However, if you need to append another value to that property using a basis template or an extension template,
+		you can do this with := addToList():
+	</p>
+	<pre>config.linkVars <strong>:=</strong> addToList(print)</pre>
+	<p>Parsing both properties will have the same result as:
+	</p>
+	<pre>config.linkVars = L, print</pre>
+	<h3>List of functions</h3>
+
+	<p>It's so easy, isn't it? Mind the <em>:=</em> operator as a placeholder for the parser to process the function.
+		The &quot;<a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_ts/4.1.0/view/1/2/"
+				title="doc_core_ts documentation at typo3.org" class="external-link">TypoScript Syntax and In-depth
+			Study</a>&quot; docs reveal the following list of functions which can be used here. There's even a hook to
+		use your own functions.
+	</p>
+	<pre>prependString()</pre>
+	<p>... adds a string before the existing one.
+	</p>
+	<pre>appendString()</pre>
+	<p>... adds a string after the existing one.
+	</p>
+	<pre>removeString()</pre>
+	<p>... removes a string from the existing one. str_replace() is used here.
+	</p>
+	<pre>replaceString()</pre>
+	<p>... replaces an existing string with a new one. str_replace() is used here,with the pipe symbol | as a divider.
+	</p>
+	<pre>addToList()</pre>
+	<p>... appends values to a comma separated list. The list will neither be sorted nor distinct. Multiple values are
+		given as a comma separated list.
+	</p>
+	<pre>removeFromList()</pre>
+	<p>... removes values from a comma separated list. Multiple values are given as a comma separated list.</p>
+</section>
+
+{% include post-taglist.html %}
+	
+<section class="comments"><h3>Comments</h3>
+	<ol>
+		<li id="comment-1">
+			<span class="comment-author">Phil</span> <time class="comment-time" datetime="2010-07-27 20:18">on July 27, 2010 at 20:18</time>
+			<p>
+				Sample usage of replaceString:<br />
+<br />
+somevalue := replaceString(oldstring|newstring)
+			</p>
+		</li>
+	
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://typoconsult.dk" rel="external">TypoConsult</a></span> <time class="comment-time" datetime="2010-11-17 23:59">on November 17, 2010 at 23:59</time>
+			<p>
+				A quick example:<br />
+<br />
+lib.footer = COA<br />
+lib.footer {<br />
+wrap = Copyright ###year### typoconsult.dk<br />
+wrap := replaceString(###year###||)<br />
+<br />
+10 = TEXT<br />
+10 {<br />
+	wrap =  | <br />
+	data = date:U<br />
+	strftime =%Y<br />
+}<br />
+}<br />
+<br />
+Kind regards<br />
+TypoConsult
+			</p>
+		</li>
+	</ol>
+</section>

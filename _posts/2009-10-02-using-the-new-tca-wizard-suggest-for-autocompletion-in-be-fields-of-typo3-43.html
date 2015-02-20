@@ -1,0 +1,323 @@
+---
+layout: post
+title: Using the new TCA wizard "suggest" for autocompletion in BE fields of TYPO3 4.3
+date: 2009-10-02 09:25
+excerpt: There's a new type of wizard in the TYPO3 core called "suggest", which has been added to TCA with 4.3beta-1. This wizard adds a magic input field for autocompletion to fields of type "group" or "select", also called find-as-you-type. It helps to quickly find a record by typing its name/title in the suggest field, getting an AJAX dropdown list with all possible results. This article demonstrates how to implement this wizard in your TYPO3 extension. 
+tags: 
+  - TYPO3
+  - TCA
+  - Wizard
+  - Usability
+  - Backend
+  - Extension development
+  - Extensions
+  - Autocompletion
+  - find-as-you-type
+---
+<section><h3>How does the suggest wizard work?</h3>
+
+	<p>Whenever you type some characters in the suggest field, the wizard searches for records matching the label field
+		of given tables and immediately presents a list of results (find-as-you-type). Therefore it scans the table
+		column which was set in the <a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/4/2/#id4240310"
+				title="The ctrl section in TYPO3 Core API documentation" class="external-link">&quot;label&quot;-field
+			or &quot;label_alt&quot;-field given in the $TCA['ctrl'] section</a> of the tables. That's for example the
+		title field in the pages table or the header field in tt_content. The suggest wizard can be added to a group or
+		select field like any other wizard by adding it to the $TCA['columns']['fieldname']['config'] section. At the
+		time of writing this article, it's supposed to work only for database records: that means fields of type &quot;group&quot;
+		having set 'internal_type' =&gt; 'db'or fields of type &quot;select&quot; having 'foreign_table' =&gt;
+		tablename. Files and static items don't work ATM.
+	</p>
+
+	<p><img alt="suggest wizard in action" src="/files/images/RTEmagicC_suggest_dropdown.png.png" height="163"
+			width="234"/>
+	</p>
+
+	<h3>How to add the suggest wizard to a field of your extension?</h3>
+
+	<p>The suggest wizard is added to a field like any other wizard in TCA. If you have no idea of using wizards yet,
+		have a look at wizard section of the <a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/4/3/#id4447706"
+				title="Documenation on wizards in TCA" class="external-link">TYPO3 Core API documentation</a>.<br/>For
+		the suggest wizard, there are two places for configuration: The $TCA['columns']['fieldname']['config'] section
+		and page TSconfig.
+	</p>
+
+	<h3>A simple scenario for demonstration</h3>
+
+	<p>There's an extension appended in this article for demonstration. The extension ships two new tables for articles
+		and authors. To set the author in the article table, you can select records from the author table. Therefore the
+		author field of articles not only shows a list of selectable authors, but also implements the new suggest
+		wizard.
+	</p>
+
+	<p><img alt="Field with suggest wizard in the BE" src="/files/images/suggest_field.png" height="308" width="617"/>
+	</p>
+
+	<h3>Downloading the example extension</h3>
+
+	<p>If you like to see the wizard in action, you can download the example extension &quot;<a
+			href="/files/examples/T3X_demo_suggest-0_0_0-z-200909251651.t3x" title="Initiates file download"
+			class="download">Demonstrate the TCA suggest wizard (demo_suggest)</a>&quot;.
+	</p>
+
+	<p>The extension ships some sample data as a t3d file inside res/suggest_demo_dataset.t3d which can be imported with
+		the import/export tool. You need to move this file into the fileadmin/ directory to be able to import the data
+		into your TYPO3 installation.
+	</p>
+
+	<h3>Implementing the wizard</h3>
+
+	<p>The below example code shows how to add the wizard to the &quot;author&quot; field of the table &quot;tx_demosuggest_article&quot;
+		in TCA. In the &quot;allowed&quot; section, you need to add the table which should be searched for records.
+		(When editing an article, you want to search for authors).
+	</p>
+	<pre><b>TCA (tca.php)</b><br/><br/>$TCA['tx_demosuggest_article']['columns']['author']['config'] =&gt; array(<br/>&nbsp;&nbsp;&nbsp; 'type' =&gt; 'select',&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp; 'foreign_table' =&gt; 'tx_demosuggest_author',<br/>&nbsp;&nbsp;&nbsp; 'allowed' =&gt; 'tx_demosuggest_author',&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp; 'size' =&gt; 10,&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp; 'minitems' =&gt; 0,<br/>&nbsp;&nbsp;&nbsp; 'maxitems' =&gt; 100,<br/>&nbsp;&nbsp;&nbsp; 'wizards' =&gt; array(<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'suggest' =&gt; array(&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'type' =&gt; 'suggest',<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ),<br/>&nbsp;&nbsp;&nbsp; ),<br/>);</pre>
+	<p>There are some configuration options which can be set directly in the TCA-wizard section or by using pageTS. The
+		below example limits the number of results to 5 and searches only in page 123:
+	</p>
+	<pre><b>TCA (tca.php)</b><br/><br/>$TCA['tx_demosuggest_article']['columns']['author']['config'] =&gt; array(<br/>&nbsp;&nbsp;&nbsp; (...)<br/>&nbsp;&nbsp;&nbsp; 'wizards' =&gt; array(<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'suggest' =&gt; array(&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'type' =&gt; 'suggest',<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'tx_demosuggest_author' =&gt; array(<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'maxItemsInResultList' =&gt; 5,<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 'pidList' =&gt; '123',<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ),<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ),<br/>&nbsp;&nbsp;&nbsp; ),<br/>);</pre>
+	<p>These options can also be set in page TSconfig:
+	</p>
+	<pre><b>pageTS (TSconfig)</b><br/><br/>TCEFORM.suggest.tx_demosuggest_author {<br/>&nbsp; maxItemsInResultList = 5<br/>&nbsp; pidList = 123<br/>}</pre>
+	<p>Instead of setting these options for a certain table, you can also set a default value for any table:
+	</p>
+	<pre><b>pageTS (TSconfig)</b><br/><br/>TCEFORM.suggest.default {<br/>&nbsp; maxItemsInResultList = 5<br/>}</pre>
+	<p>Find a full list of all options in the <a
+			href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/current/"
+			title="TYPO3 Core API documentation" class="external-link">TYPO3 Core API documentation</a>. As long as 4.3
+		is not realeased, please refer to the corresponding section of <a
+				href="http://wiki.typo3.org/index.php/Pending_Documentation#suggest_-_autocomplete"
+				title="Pending documentation for 4.3 in the TYPO3 wiki" class="external-link">pending documentation in
+			TYPO3 wiki</a>.
+	</p>
+
+	<p>Of course you can also use this wizard in any table of the TYPO3 core. It is already implemented in the
+		storage_pid field of pages.
+	</p>
+
+	<h3>Further Reading</h3>
+	<ul>
+		<li><a href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/current/"
+			   title="TYPO3 Core API" class="external-link">TYPO3 Core API Documentation</a> (once 4.3 is released)
+		</li>
+		<li>
+			<a href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/4/3/#id4447706"
+			   title="Introduction to TCA wizards in TYPO3 Core API documentation" class="external-link">Wizards
+				configuration in TYPO3 Core API Documentation</a></li>
+		<li><a href="http://wiki.typo3.org/index.php/Pending_Documentation#suggest_-_autocomplete"
+			   title="Configuration options of the TCA suggest wizard in the TYPO3 wiki" class="external-link">Pending
+			documentation in the TYPO3 wiki</a> (until 4.3 is finally released)
+		</li>
+	</ul>
+</section>
+
+
+{% include post-taglist.html %}
+
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen Gebert</span>
+			<time class="comment-time" datetime="2009-10-02 12:24">on October 02, 2009 at 12:24</time>
+			<p>
+				Hi Steffen,<br/>
+				<br/>
+				what browser did you use? Usually cursor should be pointer, not the normal one. Or is this an older
+				revision? ;-)<br/>
+				<br/>
+				Regards<br/>
+				Steffen
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-10-02 12:41">on October 02, 2009 at 12:41</time>
+			<p>
+				Good catch!<br/>
+				I used a trunk version which was older than the 4.3-beta1 release. I wrote this article a week ago, but
+				then decided to release it parallel to 4.3-beta1.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen Gebert</span>
+			<time class="comment-time" datetime="2009-10-02 13:10">on October 02, 2009 at 13:10</time>
+			<p>
+				Okay.. so I'm settled down again :)<br/>
+				<br/>
+				Steffen
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-10-02 13:26">on October 02, 2009 at 13:26</time>
+			<p>
+				Aah, now I see. You mean <a href="http://forge.typo3.org/repositories/diff/typo3v4-core?rev=5977">Bug
+				#11990</a>.
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-02-11 16:15">on February 11, 2010 at 16:15</time>
+			<p>
+				Meanwhile, the TSconfig part of the suggest feature has been integrated into <a
+					href="http://typo3.org/documentation/document-library/core-documentation/doc_core_tsconfig/4.3.1/view/1/5/#id2506872">
+				the official docs (doc_core_tsconfig)</a>
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author"><a href="http://flavors.me/romac" rel="external">Romain Ruetschi</a></span>
+			<time class="comment-time" datetime="2010-04-19 18:15">on April 19, 2010 at 18:15</time>
+			<p>
+				To use the suggest wizard in FlexForms simply copy/paste what follows right before the element's closing
+				tag:<br/>
+				<br/>
+				&lt;wizards type="array"&gt;<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&lt;suggest&gt;<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;type&gt;suggest&lt;/type&gt;<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&lt;/suggest&gt;<br/>
+				&lt;/wizards&gt;
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author"><a href="http://ipts.es" rel="external">Elías</a></span>
+			<time class="comment-time" datetime="2010-04-28 19:26">on April 28, 2010 at 19:26</time>
+			<p>
+				Only one tip for the people who is looking for it.<br/>
+				<br/>
+				If you use select instead of group, You must use the 'allowed' property that was not mandatory
+				before.<br/>
+				<br/>
+				Nice article, thanx
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Peter</span>
+			<time class="comment-time" datetime="2010-05-14 11:09">on May 14, 2010 at 11:09</time>
+			<p>
+				Any hints on how to build an own renderFunc for the results?
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-05-14 15:26">on May 14, 2010 at 15:26</time>
+			<p>
+				Have a look at the function renderRecord() in
+				t3lib/tceforms/class.t3lib_tceforms_suggest_defaultreceiver.php<br/>
+				This function calls a user function you give in renderFunc and lets you manipulate the data row.<br/>
+				<br/>
+				I am sorry that I don't have an example at hand.
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author"><a href="http://webmasterei.com" rel="external">Rainer</a></span>
+			<time class="comment-time" datetime="2010-08-06 16:34">on August 06, 2010 at 16:34</time>
+			<p>
+				This autocompleter is a good idea!<br/>
+				But I'am looking for a solution to admin recipes and its ingredients with quantity. In this case I have
+				to use IRRE (because the ingredient has also quantity.<br/>
+				Any ideas?<br/>
+				<br/>
+				Rainer
+			</p>
+		</li>
+
+		<li id="comment-11">
+			<span class="comment-author"><a href="http://webmasterei.com" rel="external">Rainer</a></span>
+			<time class="comment-time" datetime="2010-08-06 18:36">on August 06, 2010 at 18:36</time>
+			<p>
+				Hi,<br/>
+				<br/>
+				it seems that the wizard dont work if maxitems=1.<br/>
+				In this case only one select box appears and the hit of the suggester will be transfer to it.<br/>
+				<br/>
+				Here my code:<br/>
+				'config' => array (<br/>
+				'type' => 'select', <br/>
+				'size' => '15',<br/>
+				'foreign_table' => 'tx_XXX_zutat',<br/>
+				"foreign_table_where" => " ORDER BY title",<br/>
+				'eval' => 'required',<br/>
+				'allowed' => 'tx_XXX_zutat', <br/>
+				'minitems' => 0,<br/>
+				'maxitems' => 1,<br/>
+				'wizards' => array(<br/>
+				'suggest' => array( <br/>
+				'type' => 'suggest',<br/>
+				'maxItemsInResultList' => 25,<br/>
+				),<br/>
+				),
+			</p>
+		</li>
+
+		<li id="comment-12">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-08-06 22:33">on August 06, 2010 at 22:33</time>
+			<p>
+				Maybe using 'db' for type instead of 'select' helps?
+			</p>
+		</li>
+
+		<li id="comment-13">
+			<span class="comment-author"><a href="http://-" rel="external">Andy</a></span>
+			<time class="comment-time" datetime="2010-09-10 15:58">on September 10, 2010 at 15:58</time>
+			<p>
+				When I added the code to the tca.php, the changes didn't work, I had to add the <br/>
+				'wizards' => array(<br/>
+				&nbsp;&nbsp;'suggest' => array( <br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'type' => 'suggest',<br/>
+				&nbsp;&nbsp;),<br/>
+				),<br/>
+				<br/>
+				to the ext_tables.php to make the wizard work. I'm using TYPO3 4.4.2
+			</p>
+		</li>
+
+		<li id="comment-14">
+			<span class="comment-author"><a href="http://www.cross-agency.ch" rel="external">Laurent</a></span>
+			<time class="comment-time" datetime="2010-09-15 16:44">on September 15, 2010 at 16:44</time>
+			<p>
+				Just in case, an example for tt_news :<br/>
+				<br/>
+				In TsConfig :<br/>
+				TCEFORM.tt_news.yourfield.suggest.default {<br/>
+				&nbsp;&nbsp;pidList = 62<br/>
+				}<br/>
+				<br/>
+				In tca.php<br/>
+				[...]<br/>
+				'wizards' => array(<br/>
+				&nbsp;&nbsp;'suggest' => array(<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;'type' => 'suggest',<br/>
+				&nbsp;&nbsp;)<br/>
+				)<br/>
+				[...]<br/>
+				<br/>
+				Dont forget the suggest.default :)<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-15">
+			<span class="comment-author"><a href="http://www.fh-konzept.de" rel="external">Frank Fischer</a></span>
+			<time class="comment-time" datetime="2011-08-09 14:52">on August 09, 2011 at 14:52</time>
+			<p>
+				Just found out, that suggest doesn't work with "foreign_table_where"-conditions with markers like
+				"###PAGE_TSCONFIG_IDLIST###". Only the explicit csv-list works in that case.
+			</p>
+		</li>
+
+	</ol>
+</section>

@@ -1,0 +1,72 @@
+---
+layout: post
+title: Add CSH to TYPO3 FlexForm fields
+date: 2009-03-04 00:02
+excerpt: In the previous article I came up with a short introduction to adding context sensitive help to backend modules of TYPO3. Now let's have a look at FlexForms.
+tags: 
+  - TYPO3
+  - Extension development
+  - Extensions
+  - CSH
+  - FlexForms
+  - FE plugin
+---
+
+<section>
+	<p>As already shown in the <a
+			href="/blog/2009-02-26-how-to-add-context-sensitive-help-csh-items-to-typo3-extension-modules.html"
+			title="How to add context sensitive help (CSH) items to TYPO3 extension modules">previous article about
+		context sensitive help</a> (CSH), adding CSH to backend modules does not mean much effort. What about FlexForms?
+	</p>
+
+	<p>Since TYPO3 4.2 CSH is also supported for FlexForm fields. Integration is very easy since you only have to create
+		a file with the CSH content and add a line to your FlexForm pointing to that file. Have a look at the following
+		example.
+	</p>
+
+	<p>As always the FlexForm is configured in XML. The item which points to the location of the CSH content must be
+		placed inside the &lt;ROOT&gt;&lt;TCEforms&gt; tags. The name of the element is cshFile (and it's case
+		sensitive!).
+	</p>
+
+	<p>The FlexForm file <i>your_extkey/pi1/flexform_ds.xml</i> looks like this:
+	</p>
+	<pre>&lt;T3DataStructure&gt;<br/>  &lt;meta&gt;<br/>&nbsp;   &lt;langDisable&gt;1&lt;/langDisable&gt;<br/>&nbsp; &lt;/meta&gt;<br/>&nbsp; &lt;sheets&gt;<br/>&nbsp;   &lt;sDEF&gt;<br/>&nbsp;&nbsp;&nbsp;   &lt;ROOT&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   &lt;TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   &lt;sheetTitle&gt;The title of the sheet&lt;/sheetTitle&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>
+		&lt;cshFile&gt;LLL:EXT:your_extkey/pi1/locallang_csh_flexform.xml&lt;/cshFile&gt;</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &lt;type&gt;array&lt;/type&gt;<br/>&nbsp; &nbsp; &nbsp; &nbsp; &lt;el&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   &lt;yourField&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   &lt;TCEforms&gt;<br/>&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;  &lt;label&gt;Label of the the field&lt;/label&gt;<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;config&gt;<br/>&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ... field configuration ...<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/config&gt;<br/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/TCEforms&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/yourField&gt;<br/>&nbsp; &nbsp; &nbsp; &nbsp; &lt;/el&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/ROOT&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/sDEF&gt;<br/> &nbsp;&lt;/sheets&gt;<br/>&lt;/T3DataStructure&gt;</pre>
+	<p>The significant line is marked in strong letters. Next step is to add the CSH content as already shown in the
+		previous article.
+	</p>
+
+	<p>The file should be named <i>your_extkey/pi1/locallang_csh_flexform.xml</i>
+	</p>
+	<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; standalone=&quot;yes&quot; ?&gt;<br/>&lt;T3locallang&gt;<br/>&nbsp; &lt;meta type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;description&gt;CSH labels for FlexForm fields&lt;/description&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;type&gt;CSH&lt;/type&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;csh_table&gt;&lt;/csh_table&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;fileId&gt;EXT:your_extkey/pi1/locallang_csh_flexform.xml&lt;/fileId&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;labelContext type=&quot;array&quot;&gt;&lt;/labelContext&gt;<br/>&nbsp; &lt;/meta&gt;<br/>&nbsp; &lt;data type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;languageKey index=&quot;default&quot; type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.alttitle&quot;&gt;alternative title&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.description&quot;&gt;description&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.details&quot;&gt;details&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.syntax&quot;&gt;syntax&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.image_descr&quot;&gt;image caption&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.image&quot;&gt;gfx/i/pages.gif&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;yourField.seeAlso&quot;&gt;pages:starttime&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp; &lt;/languageKey&gt;<br/>&nbsp; &lt;/data&gt;<br/>&lt;/T3locallang&gt;</pre>
+	<p>That's even more simple than adding CSH to a BE module. At the time of writing this article, one features does
+		not yet work as it does for TCA fields. Hovering the mouse pointer over a field title should trigger a popup
+		which shows the title and description of the field. This does not work in FlexForms. I have <a
+				href="http://bugs.typo3.org/view.php?id=10575"
+				title="Feature request to add the missing CSH hover popup to FlexForm fields" class="external-link">opened
+			a bug</a> and submitted a patch to the core list to fix this issue and hope it will be resolved in the
+		forthcoming 4.3 release. In the context of the bugreport you can also find a <a
+				href="http://bugs.typo3.org/file_download.php?file_id=6898&amp;type=bug"
+				title="Extension download as .t3x file" class="external-link">test extension</a>, which serves as a
+		showcase for FlexForm CSH integration.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-01-24 12:07">on January 24, 2011 at 12:07</time>
+			<p>
+				Please note that the CSH API for FlexForms has changed with TYPO3 4.5. You can find an article about the
+				changes on buzz: <a
+					href="http://buzz.typo3.org/teams/core/article/getting-ready-for-45-changes-in-csh-for-flexforms/">http://buzz.typo3.org/teams/core/article/getting-ready-for-45-changes-in-csh-for-flexforms/</a>
+			</p>
+		</li>
+
+	</ol>
+</section>

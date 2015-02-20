@@ -1,0 +1,72 @@
+---
+layout: post
+title: Fixing locale problems for dates in TYPO3
+date: 2008-09-30 18:40
+excerpt: Sometimes, localization of dates in TYPO3 seems not to work as expected. Of course it does, but finding the right configuration can be puzzling and time consuming. One reason can be the confusing variety of locale declarations.
+tags: 
+  - TYPO3
+  - TypoScript
+  - Locales
+  - Date
+  - Language
+  - l10n
+---
+
+<section>
+	<p>Localization problems mostly emerge when moving a website from one server to another or when working with
+	different environments at the same time.
+	</p>
+
+	<p>Today, I did some tests on moving from outdated SuSE to Debian Etch. Cloning the database and the files was easy
+		and went fine, but then I stumbled over wrong date localization of tt_news. The website comes with german as
+		default language and english and french as secondary. Nevertheless, the fresh clone on the Debian server ignored
+		all language settings, using english formats for all pages.
+	</p>
+
+	<p>The reason was the config.locale_all setting in the TypoScript template. My configuration was:
+	</p>
+	<pre>config.locale_all = de_DE<br/>[globalVar = GP:L = 1]<br/>&nbsp; config.locale_all = en_EN<br/>[global]<br/>[globalVar = GP:L = 2]<br/>&nbsp; config.locale_all = fr_FR<br/>[global]</pre>
+	<p>and this worked fine on SuSE. However, Debian does not come with any of these locales and TYPO3 switched to
+		default (english). I found out, that the locales on Debian use a different naming scheme than SuSE does.
+		Switching to the command line,
+	</p>
+	<pre>locale -a</pre>
+	<p>revealed the names of all installed locales. That was de_DE.utf-8, en_US.utf-8 and fr_FR.utf-8. I changed my
+		configuration accordingly and everything worked fine:
+	</p>
+	<pre>config.locale_all = de_DE.utf-8<br/>[globalVar = GP:L = 1]<br/>&nbsp; config.locale_all = en_US.utf-8<br/>[global]<br/>[globalVar = GP:L = 2]<br/>&nbsp; config.locale_all = fr_FR.utf-8<br/>[global]</pre>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Wim Spijker</span>
+			<time class="comment-time" datetime="2012-05-12 20:14">on May 12, 2012 at 20:14</time>
+			<p>
+				Thank you very much. It helped me a lot. <br/>
+				In ubuntu<br/>
+				sudo locale-gen<br/>
+				sudo locale-gen nl_NL.utf8<br/>
+				sudo locale-gen de_DE.utf8<br/>
+				Now it is working fine.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://www.edimensioins.co" rel="external">Monis</a></span>
+			<time class="comment-time" datetime="2013-02-01 07:46">on February 01, 2013 at 07:46</time>
+			<p>
+				Hi Steffen, <br/>
+				I tried as per your finding and guidance but it didn't work for me, what you think this could be because
+				of? Is it some thing do do with htaccess or any other configuration, dutch version is not showing the
+				dates in localized format in my case.<br/>
+				<br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

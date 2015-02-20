@@ -1,0 +1,172 @@
+http://lenny.test/typo3/
+
+GET /typo3/ HTTP/1.1
+Host: lenny.test
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+
+HTTP/1.x 200 OK
+Date: Mon, 23 Nov 2009 10:53:43 GMT
+Server: Apache/2.2.9 (Debian)
+X-Powered-By: PHP/5.2.6-1+lenny2
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+Set-Cookie: be_typo_user=f21a85fd75392674251c4e3dafe4afe3; path=/
+Set-Cookie: PHPSESSID=9b50204d325274ae71045d1e9e2b5720; path=/
+Last-Modified: Mon, 23 Nov 2009 10:53:43 GMT
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: 3026
+Keep-Alive: timeout=15, max=100
+Connection: Keep-Alive
+Content-Type: text/html;charset=utf-8
+----------------------------------------------------------
+http://lenny.test/typo3/index.php
+
+POST /typo3/index.php HTTP/1.1
+Host: lenny.test
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://lenny.test/typo3/
+Cookie: testcookie; be_typo_user=f21a85fd75392674251c4e3dafe4afe3; PHPSESSID=9b50204d325274ae71045d1e9e2b5720
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 201
+challenge=86eb246d729b34953abbf3f396707743&login_status=login&userident=&redirect_url=backend.php&loginRefresh=&interface=backend&username=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&p_field=&commandLI=Login
+HTTP/1.x 200 OK
+Date: Mon, 23 Nov 2009 10:53:47 GMT
+Server: Apache/2.2.9 (Debian)
+X-Powered-By: PHP/5.2.6-1+lenny2
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: 619
+Keep-Alive: timeout=15, max=90
+Connection: Keep-Alive
+Content-Type: text/html
+----------------------------------------------------------
+https://login.launchpad.net/+openid
+
+POST /+openid HTTP/1.1
+Host: login.launchpad.net
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://lenny.test/typo3/index.php
+Cookie: lp=Gwlih7mf2z2mZAJDCgtOnjX6i6A--lMNmmIJlCsWFE0kUOr9U7n0Mg; openid_referer="http://lenny.test/typo3/index.php"
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 655
+openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flenny.test%2F&openid.mode=checkid_setup&openid.return_to=http%3A%2F%2Flenny.test%2Ftypo3%2Fsysext%2Fopenid%2Fclass.tx_openid_return.php%3Flogin_status%3Dlogin%26tx_openid_location%3Dhttp%253A%252F%252Flenny.test%252Ftypo3%252Findex.php%26tx_openid_mode%3Dfinish%26tx_openid_claimed%3Dhttps%253A%252F%252Flaunchpad.net%252F%257EUSERNAME%26janrain_nonce%3D2009-11-23T10%253A53%253A53ZjLUKqZ&openid.identity=https%3A%2F%2Flogin.launchpad.net%2F%2Bid%2Fh84mzDN&openid.claimed_id=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&openid.assoc_handle=%7BHMAC-SHA1%7D%7B4b0a7a2b%7D%7BqGkqSg%3D%3D%7D
+HTTP/1.x 200 Ok
+Date: Mon, 23 Nov 2009 12:03:57 GMT
+Server: zope.server.http (HTTP)
+X-Powered-By: Zope (www.zope.org), Python (www.python.org)
+Content-Type: text/html;charset=utf-8
+Vary: Cookie,Authorization,Accept-Encoding
+Set-Cookie: lp=Gwlih7mf2z2mZAJDCgtOnjX6i6A--lMNmmIJlCsWFE0kUOr9U7n0Mg; Domain=.launchpad.net; expires=Tue, 23 Nov 2010 12:03:57 GMT; Path=/; secure;
+Set-Cookie: openid_referer="http://lenny.test/typo3/index.php";
+Via: 1.1 login.launchpad.net
+Content-Encoding: gzip
+Keep-Alive: timeout=15, max=100
+Connection: Keep-Alive
+Transfer-Encoding: chunked
+----------------------------------------------------------
+https://login.launchpad.net/+decide
+
+POST /+decide HTTP/1.1
+Host: login.launchpad.net
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: https://login.launchpad.net/+openid
+Cookie: lp=Gwlih7mf2z2mZAJDCgtOnjX6i6A--lMNmmIJlCsWFE0kUOr9U7n0Mg; openid_referer="http://lenny.test/typo3/index.php"
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 66
+field.nonce=5NQrSdfeIPHCxqmlO4iIuKzUCyL&field.actions.auth=Sign+In
+HTTP/1.x 302 Moved Temporarily
+Date: Mon, 23 Nov 2009 12:03:58 GMT
+Server: zope.server.http (HTTP)
+X-Powered-By: Zope (www.zope.org), Python (www.python.org)
+X-Content-Type-Warning: guessed from content
+Location: http://lenny.test/typo3/sysext/openid/class.tx_openid_return.php?login_status=login&tx_openid_location=http%3A%2F%2Flenny.test%2Ftypo3%2Findex.php&tx_openid_mode=finish&tx_openid_claimed=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&janrain_nonce=2009-11-23T10%3A53%3A53ZjLUKqZ&openid.assoc_handle=%7BHMAC-SHA1%7D%7B4b0a7a2b%7D%7BqGkqSg%3D%3D%7D&openid.claimed_id=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&openid.identity=https%3A%2F%2Flogin.launchpad.net%2F%2Bid%2Fh84mzDN&openid.mode=id_res&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.op_endpoint=https%3A%2F%2Flogin.launchpad.net%2F%2Bopenid&openid.response_nonce=2009-11-23T12%3A03%3A58ZajcR0R&openid.return_to=http%3A%2F%2Flenny.test%2Ftypo3%2Fsysext%2Fopenid%2Fclass.tx_openid_return.php%3Flogin_status%3Dlogin%26tx_openid_location%3Dhttp%253A%252F%252Flenny.test%252Ftypo3%252Findex.php%26tx_openid_mode%3Dfinish%26tx_openid_claimed%3Dhttps%253A%252F%252Flaunchpad.net%252F%257EUSERNAME%26janrain_nonce%3D2009-11-23T10%253A53%253A53ZjLUKqZ&openid.sig=Z3PL1B117OCSYS6ZBva1AjpCGg8%3D&openid.signed=assoc_handle%2Cclaimed_id%2Cidentity%2Cmode%2Cns%2Cop_endpoint%2Cresponse_nonce%2Creturn_to%2Csigned
+Vary: Cookie,Authorization,Accept-Encoding
+Content-Type: text/plain;charset=utf-8
+Via: 1.1 login.launchpad.net
+Content-Encoding: gzip
+Content-Length: 20
+Keep-Alive: timeout=15, max=98
+Connection: Keep-Alive
+----------------------------------------------------------
+http://lenny.test/typo3/sysext/openid/class.tx_openid_return.php?login_status=login&tx_openid_location=http%3A%2F%2Flenny.test%2Ftypo3%2Findex.php&tx_openid_mode=finish&tx_openid_claimed=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&janrain_nonce=2009-11-23T10%3A53%3A53ZjLUKqZ&openid.assoc_handle=%7BHMAC-SHA1%7D%7B4b0a7a2b%7D%7BqGkqSg%3D%3D%7D&openid.claimed_id=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&openid.identity=https%3A%2F%2Flogin.launchpad.net%2F%2Bid%2Fh84mzDN&openid.mode=id_res&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.op_endpoint=https%3A%2F%2Flogin.launchpad.net%2F%2Bopenid&openid.response_nonce=2009-11-23T12%3A03%3A58ZajcR0R&openid.return_to=http%3A%2F%2Flenny.test%2Ftypo3%2Fsysext%2Fopenid%2Fclass.tx_openid_return.php%3Flogin_status%3Dlogin%26tx_openid_location%3Dhttp%253A%252F%252Flenny.test%252Ftypo3%252Findex.php%26tx_openid_mode%3Dfinish%26tx_openid_claimed%3Dhttps%253A%252F%252Flaunchpad.net%252F%257EUSERNAME%26janrain_nonce%3D2009-11-23T10%253A53%253A53ZjLUKqZ&openid.sig=Z3PL1B117OCSYS6ZBva1AjpCGg8%3D&openid.signed=assoc_handle%2Cclaimed_id%2Cidentity%2Cmode%2Cns%2Cop_endpoint%2Cresponse_nonce%2Creturn_to%2Csigned
+
+GET /typo3/sysext/openid/class.tx_openid_return.php?login_status=login&tx_openid_location=http%3A%2F%2Flenny.test%2Ftypo3%2Findex.php&tx_openid_mode=finish&tx_openid_claimed=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&janrain_nonce=2009-11-23T10%3A53%3A53ZjLUKqZ&openid.assoc_handle=%7BHMAC-SHA1%7D%7B4b0a7a2b%7D%7BqGkqSg%3D%3D%7D&openid.claimed_id=https%3A%2F%2Flaunchpad.net%2F%7EUSERNAME&openid.identity=https%3A%2F%2Flogin.launchpad.net%2F%2Bid%2Fh84mzDN&openid.mode=id_res&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.op_endpoint=https%3A%2F%2Flogin.launchpad.net%2F%2Bopenid&openid.response_nonce=2009-11-23T12%3A03%3A58ZajcR0R&openid.return_to=http%3A%2F%2Flenny.test%2Ftypo3%2Fsysext%2Fopenid%2Fclass.tx_openid_return.php%3Flogin_status%3Dlogin%26tx_openid_location%3Dhttp%253A%252F%252Flenny.test%252Ftypo3%252Findex.php%26tx_openid_mode%3Dfinish%26tx_openid_claimed%3Dhttps%253A%252F%252Flaunchpad.net%252F%257EUSERNAME%26janrain_nonce%3D2009-11-23T10%253A53%253A53ZjLUKqZ&openid.sig=Z3PL1B117OCSYS6ZBva1AjpCGg8%3D&openid.signed=assoc_handle%2Cclaimed_id%2Cidentity%2Cmode%2Cns%2Cop_endpoint%2Cresponse_nonce%2Creturn_to%2Csigned HTTP/1.1
+Host: lenny.test
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Cookie: testcookie; be_typo_user=f21a85fd75392674251c4e3dafe4afe3; PHPSESSID=9b50204d325274ae71045d1e9e2b5720
+
+HTTP/1.x 303 See Other
+Date: Mon, 23 Nov 2009 10:53:54 GMT
+Server: Apache/2.2.9 (Debian)
+X-Powered-By: PHP/5.2.6-1+lenny2
+Expires: 0
+Cache-Control: no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: be_typo_user=1cfd8d47721553db5a29731539be7000; path=/
+Last-Modified: Mon, 23 Nov 2009 10:53:54 GMT
+Location: http://lenny.test/typo3/sysext/openid/
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: 20
+Keep-Alive: timeout=15, max=87
+Connection: Keep-Alive
+Content-Type: text/html
+----------------------------------------------------------
+http://lenny.test/typo3/sysext/openid/
+
+GET /typo3/sysext/openid/ HTTP/1.1
+Host: lenny.test
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; de; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: de-de,de;q=0.8,en-us;q=0.5,en;q=0.3
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-15,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Cookie: testcookie; be_typo_user=1cfd8d47721553db5a29731539be7000; PHPSESSID=9b50204d325274ae71045d1e9e2b5720
+
+HTTP/1.x 200 OK
+Date: Mon, 23 Nov 2009 10:53:54 GMT
+Server: Apache/2.2.9 (Debian)
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: 702
+Keep-Alive: timeout=15, max=89
+Connection: Keep-Alive
+Content-Type: text/html;charset=UTF-8
+----------------------------------------------------------

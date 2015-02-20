@@ -1,0 +1,64 @@
+---
+layout: post
+title: Security issue in TYPO3 Extension Secure Directory (kw_secdir)
+date: 2008-09-19 19:24
+excerpt: Today, the TYPO3 security team released a collective security bulletin. Since I am the author of one extension which was listed in the bulletin (kw_secdir), I'd like to comment this a little bit. Especially the severity of "high" sounds evil, but it's IMHO less dangerous than some might think.
+tags: 
+  - TYPO3
+  - Extensions
+  - Security
+  - Bugs
+---
+
+
+<section>
+	<p>The extension was mentioned in the <a
+		href="http://typo3.org/teams/security/security-bulletins/typo3-20080919-1/"
+		title="Security Bulletin on typo3.org" class="external-link">Collective Security Bulletin TYPO3-20080919-1</a>,
+	which was released today, September 19, 2008.
+	</p>
+
+	<h3>Details about the issue:</h3>
+
+	<p>I got a mail on June 30, 2008 from the security team about the extension. It allows BE users to enter username,
+		password and hosts in the filelist module. The problem here was, that the host parameter was &quot;not properly
+		sanitized, making it possible to add arbitrary code lines to a htaccess file&quot;, the security team wrote. An
+		example how to insert malicious values was appended:
+	</p>
+
+	<p><em>POC: all%0DAddType application/x-httpd-php .txt</em>
+	</p>
+
+	<p>This could lead to arbitrary code execution, because user were then able to upload executable PHP code in the
+		filelist module (under certain conditions, see below).
+	</p>
+
+	<h3>Description of the patch:</h3>
+
+	<p>I added a routine to compare the input field against a whitelist of characters to prevent injection of control
+		characters.
+	</p>
+
+	<p>A fixed version was released on July 8, 2008. So far the technical facts.
+	</p>
+
+	<h3>Criticism:</h3>
+
+	<p>What I do not understand, is the bulletin severity of HIGH:
+	</p>
+
+	<p>The vulnerability only affects systems with unsafe Apache configuration, namely the infamous <em>AllowOverride
+		All</em> for .htaccess context. It is even mentioned in the extension manual not to use that, because it opens
+		doors for security holes. So no excuse if someone didn't give a f*** about this and was hit by the issue.
+	</p>
+
+	<p>Also, why did the security team wait more than two month to release a bulletin earlier, if the severity is so
+		high?
+	</p>
+
+	<p>Please don't get me wrong. The issue was there and some user may have been affected. But there was no description
+		at all in the bulletin, and I wanted to cast a light on this.
+	</p>
+</section>
+
+{% include post-taglist.html %}

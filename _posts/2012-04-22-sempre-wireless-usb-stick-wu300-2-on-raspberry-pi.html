@@ -1,0 +1,218 @@
+---
+layout: post
+title: Sempre Wireless USB stick WU300-2 on Raspberry Pi
+date: 2012-04-22 19:45
+excerpt: The first models of Raspberry Pi computers were shipped and I was happy to receive one this week. RasPi is a SoC computer for ~25€ with Broadcom BCM2835 (ARM) CPU, 256MB, Ethernet, USB, HDMI and 3.5mm audio jack. I completed the equipment with an additional wireless USB adapter. Let me describe how to I managed to get the device working. !!!! UPDATE (2012/07/22) I recommend to use the raspbian image with a prebuild wireless module working out of the box.
+tags: 
+  - RaspberryPi
+  - RasPi
+  - Linux
+  - Wireless
+  - Realtek
+---
+<section>
+	<h3>Update (2012/07/22)</h3>
+
+	<p>I recommend to upgrade your Raspberry Pi to <a href="http://www.raspbian.org/"
+													  title="Raspberry Pi Debian Distribution with armhf support"
+													  class="external-link-new-window">raspbian distribution</a>. It not
+		only comes with FPU support for armhf arch, but also ships the neccessary firmware and kernel module r8712u from
+		<a href="http://www.debian.org/releases/wheezy/" title="Debian Wheezy release information"
+		   class="external-link">Debian wheezy</a> by default.
+	</p>
+
+	<h3>The original story: How to build wireless kernel module for Raspberry Pi</h3>
+
+	<p>I bought the&nbsp;cheapest&nbsp;wireless USB&nbsp;adapter my <a
+			href="http://www.kmcomputer.de/item/984/980/0/180619/sempre-wlan-mini-usb2.0-stick--802.11gn-300mbs.html"
+			title="KM computer" class="external-link">local store</a>&nbsp;had:&nbsp;<a
+			href="http://www.kmcomputer.de/item/984/980/0/180619/sempre-wlan-mini-usb2.0-stick--802.11gn-300mbs.html"
+			title="Sempre Electronics" class="external-link">Sempre Wireless LAN 11N WU300-2</a>. Back at home I booted
+		the Debian image and plugged in&nbsp;the device.
+	</p>
+
+	<p>Unfortunately it did not work out of the box , since it uses a realtek chipset.&nbsp;Realtek wireless devices are
+		infamous for insufficient&nbsp;open source&nbsp;support. However, after fiddling around some time I&nbsp;managed
+		to get it working. Here's a little&nbsp;howto. At the end of the article,&nbsp;you can find a built of&nbsp;the&nbsp;neccessary
+		kernel module.
+	</p>
+
+	<h3>Examining the device</h3>
+
+	<p>First, plugin in the device and watch&nbsp;the output of dmesg:
+	</p>
+	<pre>$ dmesg<br/><br/>usb 1-1.2: new high speed USB device number 4 using dwc_otg<br/>usb 1-1.2: New USB device found, idVendor=0bda, idProduct=8172<br/>usb 1-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3<br/>usb 1-1.2: Product: RTL8191S WLAN Adapter&nbsp;<br/>usb 1-1.2: Manufacturer: Manufacturer Realtek&nbsp;<br/>usb 1-1.2: SerialNumber: 00e04c000001</pre>
+	<p>Looks good so far.&nbsp;Now&nbsp;find out what ID the device&nbsp;has:
+	</p>
+	<pre>$ lsusb<br/><br/> Bus 001 Device 006: ID 0bda:8172 Realtek Semiconductor Corp. RTL8191SU 802.11n WLAN Adapter</pre>
+	<p>Then search the ID in <a href="http://wiki.debian.org/rtl819x#supported-r8712u"
+								title="Debian wiki page for WiFi devices based on Realtek 802.11n."
+								class="external-link">Debian Wiki for the&nbsp;corresponding kernel module</a>:&nbsp;mine
+		is <b>r8712u</b>.
+	</p>
+
+	<p>The device&nbsp;driver you need&nbsp;consists of&nbsp;two parts:</p>
+	<ol>
+		<li>The kernel module and</li>
+		<li>the&nbsp;firmware image.</li>
+	</ol>
+	<h3>Kernel module r8712u</h3>
+
+	<p>The kernel module r8712u&nbsp;is located&nbsp;in the&nbsp;staging area of the kernel. Unfortunately the&nbsp;staging
+		modules&nbsp;are not shipped with the <a href="http://www.raspberrypi.org/downloads"
+												 title="Debian Linux images from raspberrypi.org" class="external-link">Debian
+			image (debian6-19-04-2012.img) from Rasperry Pi</a>. So you'd have to build them yourself (or download and&nbsp;use
+		the one I built).
+	</p>
+
+	<p>To be able to build a kernel modules, you need some additional&nbsp;Debian packages:
+	</p>
+	<pre>$ sudo aptitude install build-essential libncurses5-dev</pre>
+	<p>Fetch the kernel sources from github like it is <a href="http://elinux.org/RPi_Kernel_Compilation"
+														  title="Compile a kernel for Raspberry Pi"
+														  class="external-link-new-window">described in the elinux
+		wiki</a>:
+	</p>
+	<pre>$&nbsp;mkdir raspi &amp;&amp; cd raspi/<br/>$ git clone https://github.com/raspberrypi/linux.git<br/>$ cd linux</pre>
+	<p>Now configure the kernel:
+	</p>
+	<pre>$ cp arch/arm/configs/bcmrpi_cutdown_defconfig .config<br/>$ make menuconfig</pre>
+	<p>Enter the&nbsp;sections
+	</p>
+	<pre>Device Drivers &nbsp;---&gt;<br/>&nbsp; &nbsp;Staging drivers &nbsp;---&gt; &nbsp;</pre>
+	<p>and select (M) for&nbsp;the corresponding&nbsp;chipset:
+	</p>
+	<pre>(M)&nbsp;RealTek RTL8712U (RTL8192SU) Wireless LAN NIC driver</pre>
+	<p>Save your configuration and build the module:
+	</p>
+	<pre>$ make modules</pre>
+	<p>Copy the modules into the kernel module&nbsp;directory:
+	</p>
+	<pre>$ sudo cp drivers/staging/rtl8712/r8712u.ko /lib/modules/3.1.9+/kernel/net/wireless/</pre>
+	<h3>Firmware image</h3>
+
+	<p>Realtek chipset need additional binary&nbsp;firmware images:
+	</p>
+	<pre>$ sudo aptitude install&nbsp;firmware-realtek</pre>
+	<p>(You need to have Debian&nbsp;<a
+			href="http://omer.me/2012/04/setting-up-wireless-networks-under-debian-on-raspberry-pi/"
+			title="Setting up Wifi under Debian on Raspberry Pi by Omer" class="external-link-new-window">non-free
+		repositories included in your apt/sources.list</a>.)
+	</p>
+
+	<p>Now rebuild your modules list, load the module and watch the dmesg&nbsp;log:
+	</p>
+	<pre>$ sudo depmod -a<br/>$ sudo modprobe&nbsp;r8712u<br/>$ dmesg<br/><br/>r8712u: module is from the staging directory, the quality is unknown, you have been warned.<br/>usbcore: registered new interface driver r8712u<br/>usb 1-1.2: new high speed USB device number 6 using dwc_otg<br/>usb 1-1.2: New USB device found, idVendor=0bda, idProduct=8172<br/>usb 1-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3<br/>usb 1-1.2: Product: RTL8191S WLAN Adapter&nbsp;<br/>usb 1-1.2: Manufacturer: Manufacturer Realtek&nbsp;<br/>usb 1-1.2: SerialNumber: 00e04c000001<br/>r8712u: DriverVersion: v7_0.20100831<br/>r8712u: register rtl8712_netdev_ops to netdev_ops<br/>r8712u: USB_SPEED_HIGH with 4 endpoints<br/>r8712u: Boot from EFUSE: Autoload OK<br/>r8712u: CustomerID = 0x000a<br/>r8712u: MAC Address from efuse = 00:0a:eb:14:13:52<br/>r8712u: Loading firmware from &quot;rtlwifi/rtl8712u.bin&quot;<br/>r8712u: 1 RCR=0x153f00e<br/>r8712u: 2 RCR=0x553f00e</pre>
+	<p>Finaly, you should have&nbsp;a new device wlan0:
+	</p>
+	<pre>$ iwconfig<br/><br/>lo &nbsp; &nbsp; &nbsp; &nbsp;no wireless extensions.<br/>eth0 &nbsp; &nbsp; &nbsp;no wireless extensions.<br/>wlan0 &nbsp; &nbsp; unassociated &nbsp;Nickname:&quot;rtl_wifi&quot;<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Mode:Auto &nbsp;Access Point: Not-Associated &nbsp; Sensitivity:0/0 &nbsp;<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Retry:off &nbsp; RTS thr:off &nbsp; Fragment thr:off<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Encryption key:off<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Power Management:off<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Link Quality:0 &nbsp;Signal level:0 &nbsp;Noise level:0<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Rx invalid nwid:0 &nbsp;Rx invalid crypt:0 &nbsp;Rx invalid frag:0<br/>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Tx excessive retries:0 &nbsp;Invalid misc:0 &nbsp; Missed beacon:0</pre>
+	<h3>Download the&nbsp;kernel module&nbsp;r8712u.ko</h3>
+
+	<p>If you don't want to fiddle around with compiling&nbsp;kernel, you can download the binary&nbsp;module here:&nbsp;<a
+			href="/files/linux/r8712u.ko" title="Download the kernel module r8712u" class="download">r8712u.ko</a>&nbsp;
+	</p>
+
+	<p>It is built from these sources:&nbsp;<a href="/files/linux/rtl8712-src.tar.gz" title="rtl8712 sources"
+											   class="download">rtl8712-src.tar.gz</a>&nbsp;which are provided here for
+		licence reasons. If you are interested inthe full linux kernel sources for Raspberry Pi, have a look at the <a
+				href="https://github.com/raspberrypi/linux" title="Raspberry Pi Linux Kernel" class="external-link">github
+			repository of Raspberry Pi</a>.
+	</p>
+
+	<p>&nbsp;</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Sam Ueckert</span>
+			<time class="comment-time" datetime="2012-06-05 17:11">on June 05, 2012 at 17:11</time>
+			<p>
+				Thanks for the excellent post. I have followed your method, and created the correct module and copied it
+				over. The make process doesn't configure the module however. Do you have any info on what I need to add
+				to /etc/modules.conf?<br/>
+				Also, newbs will be thrown by the unnecessary 's' on 'build-essential' if they just copy-and-paste it
+				from here.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Sam Ueckert</span>
+			<time class="comment-time" datetime="2012-06-05 17:12">on June 05, 2012 at 17:12</time>
+			<p>
+				Thanks for the excellent post. I have followed your method, and created the correct module and copied it
+				over. The make process doesn't configure the module however. Do you have any info on what I need to add
+				to /etc/modules.conf?<br/>
+				Also, newbs will be thrown by the unnecessary 's' on 'build-essential' if they just copy-and-paste it
+				from here.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Bazza14</span>
+			<time class="comment-time" datetime="2012-06-08 08:09">on June 08, 2012 at 08:09</time>
+			<p>
+				Thank you a clear and concise solution. Worked for me.
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Neil Ford</span>
+			<time class="comment-time" datetime="2012-06-09 12:50">on June 09, 2012 at 12:50</time>
+			<p>
+				If you get a Module not found error using the downloaded module, <a href="http://www.jtek.cz/?p=21">http://www.jtek.cz/?p=21</a>
+				has some more detail on how to get the module properly installed and working. <br/>
+				<br/>
+				A big thank you for making the module available. Now have working wifi.<br/>
+				<br/>
+				- Neil.
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-06-10 16:34">on June 10, 2012 at 16:34</time>
+			<p>
+				Thanks for your positive feedback.<br/>
+				I have fixed the build-essential package name and added a hint about "depmod -a".
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-07-22 02:35">on July 22, 2012 at 02:35</time>
+			<p>
+				I just installed the new raspbian armhf image (2012-07-15-wheezy-raspbian.img) and fortunately, both the
+				r8712u driver and the realtek firmware is included by default.<br/>
+				<br/>
+				Compiling kernel module is not neccessary anymore! Hurray!<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-07-22 16:48">on July 22, 2012 at 16:48</time>
+			<p>
+				If you like to connect the RasPi to your WLAN access point, I'd suggest to use WPA-PSK with WPA2
+				protocol encryption. You need to put the following configuration into /etc/network/interfaces<br/>
+				<code><br/>
+					iface wlan0 inet dhcp<br/>
+					&nbsp;&nbsp;&nbsp;&nbsp;wpa-key-mgmt WPA-PSK<br/>
+					&nbsp;&nbsp;&nbsp;&nbsp;wpa-proto WPA2<br/>
+					&nbsp;&nbsp;&nbsp;&nbsp;wpa-ssid YOUR_SSID<br/>
+					&nbsp;&nbsp;&nbsp;&nbsp;wpa-psk YOUR_ENCODED_PASSPHRASE<br/>
+				</code><br/>
+				To get an encoded passphrase use:<br/>
+				<code><br/>
+					$ /usr/bin/wpa_passphrase &lt;ssid&gt; [plaintext_passphrase]<br/>
+				</code><br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

@@ -1,0 +1,57 @@
+---
+layout: post
+title: Use Foxmarks with your own server
+date: 2008-05-12 21:17
+excerpt: The synchronization of Firefox bookmarks on two or more computers is easy done with Foxmarks. Here are some suggestions on how use it without the use of the Foxmarks webservice.
+tags: 
+  - Firefox
+  - Foxmarks
+  - Bookmarks
+---
+
+<section>
+	<p>I use <a href="http://www.foxmarks.com/" title="Foxmarks homepage" class="external-link">Foxmarks</a> to
+		synchronize my bookmarks. You simply need to install a <a
+				href="https://addons.mozilla.org/de/firefox/addon/2410" title="The Foxmarks Add-on"
+				class="external-link">Firefox Add-on</a> (Firefox 2.0 only!) and register yourself at Foxmarks.com to
+		use their webservice. If you dislike the idea of storing your treasury on someone else's server, you can also <a
+				href="http://wiki.foxmarks.com/wiki/Foxmarks:_Frequently_Asked_Questions#Can_I_use_Foxmarks_with_my_own_server.3F"
+				title="FAQ of the Foxmarks wiki" class="external-link">use your own webdav environment</a> for
+		storage.<br/>
+	</p>
+
+	<p>The bookmarks are encoded as JSON and stored as a single file. Fortunately, <a
+			href="http://blog.stefan-macke.com/2008/05/11/firefox-bookmarks-aus-foxmarks-anzeigen-json-datei/"
+			title="Blog entry of Stefan Macke" class="external-link">Stefan Macke</a> (german!) now provides a PHP
+		script to convert JSON to HTML to display your bookmarks on a website. Thank you, Stefan!
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2008-05-29 21:56">on May 29, 2008 at 21:56</time>
+			<p>
+				The latest Version (2.0.46.9) finally seems to be compatible with FF3!
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-11-17 15:25">on November 17, 2009 at 15:25</time>
+			<p>
+				Since Foxmarks has fundamentally changed their policy and technology in version 3, I strongly recommend
+				to use Mozilla Weave instead:<br/>
+				<a href="http://mozillalabs.com/weave/">http://mozillalabs.com/weave/</a><br/>
+				<br/>
+				Weave not only allows to synchronize bookmarks, but also all user setting. You can have your own server:<br/>
+				<a href="https://wiki.mozilla.org/Labs/Weave/0.5/Setup/Storage">https://wiki.mozilla.org/Labs/Weave/0.5/Setup/Storage</a>
+			</p>
+		</li>
+
+	</ol>
+</section>

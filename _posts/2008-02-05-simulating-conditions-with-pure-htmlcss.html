@@ -1,0 +1,23 @@
+---
+layout: post
+title: Simulating conditions with pure HTML/CSS
+date: 2008-02-05 16:16
+excerpt: There are many ways to assign extra styles to the menu item of the active page. TYPO3 for example provides ACT in Typoscript to do so. But did you know that this can be solved with pure HTML/CSS?  
+tags: 
+  - HTML
+  - CSS
+---
+
+<section>
+	<p>The only information we need to have is the ID of the page and the menu items. By setting a page ID in the
+	&lt;body&gt; tag and the class in the menu list item, we can use the cascading property to define extra style if
+	both are matching.
+	</p>
+
+	<h3>HTML</h3>
+	<pre>&lt;body id=&quot;papers&quot;&gt;<br/>...<br/>&lt;ul id=&quot;navMenu&quot;&gt;<br/>&nbsp; &lt;li class=&quot;blog&quot;&gt;My blog&lt;/li&gt;<br/>&nbsp; &lt;li class=&quot;papers&quot;&gt;My papers&lt;/li&gt;<br/>&nbsp; &lt;li class=&quot;books&gt;My books&lt;/li&gt;<br/>&nbsp; &lt;li class=&quot;contact&quot;&gt;Contact&lt;/li&gt;<br/>&lt;/ul&gt;</pre>
+	<h3>CSS</h3>
+	<pre><code>#blog #navMenu .blog a,<br/>#papers #navMenu .papers a,<br/>#books #navMenu .books a,<br/>#contact #navMenu .contact a, {<br/>&nbsp; color: red;<br/>}<br/><br/></pre>
+</section>
+		
+{% include post-taglist.html %}

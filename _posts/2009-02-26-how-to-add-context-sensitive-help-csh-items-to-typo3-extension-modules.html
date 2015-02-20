@@ -1,0 +1,51 @@
+---
+layout: post
+title: How to add context sensitive help (CSH) items to TYPO3 extension modules
+date: 2009-02-26 00:22
+excerpt: Software documentation is often rare and developers are lazy, when writing manuals instead of code. TYPO3 comes with a built-in help system which can easily be used to explain items directly in the backend. Dear lazy coder, let's have a look at it!
+tags: 
+  - TYPO3
+  - Extension development
+  - Extensions
+  - CSH
+  - BE module
+---
+
+<section>
+	<p>I guess CSH is one of the most obvious but yet overseen feature of the backend. That's no surprise given the
+	large quantity of icons. But the backend has been cleaned up very much with the release of 4.2. So there's no more
+	excuse to omit CSH in your extension. I recently added CSH to the <a
+			href="http://typo3.org/extensions/repository/view/devlog/current/"
+			title="devlog extension in TER on typo3.org" class="external-link">Developer's Log extension</a> and would
+	like to demonstrate some of the main techniques to add CSH to a BE module.
+	</p>
+
+	<p>All you need to have is:</p>
+	<ol>
+		<li>the content itself, put into a classic locallang file called locallang_csh_txYOUREXTKEY.xml</li>
+		<li>the item, placed in mod/index.php</li>
+		<li>a reference to tell the extension manager about the locallang file</li>
+	</ol>
+	<p>Let's start with the first one. I prepared a skeleton file, which explains the most significant fields:
+	</p>
+	<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; standalone=&quot;yes&quot; ?&gt;<br/>&lt;T3locallang&gt;<br/>&nbsp;&nbsp; &lt;meta type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;description&gt;CSH contents of myextkey module&lt;/description&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;type&gt;CSH&lt;/type&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;csh_table&gt;_MOD_tools_txmyextkeyM1&lt;/csh_table&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;fileId&gt;EXT:myextkey/locallang_csh_txmyextkey.xml&lt;/fileId&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;labelContext type=&quot;array&quot;&gt;&lt;/labelContext&gt;<br/>&nbsp;&nbsp; &lt;/meta&gt;<br/>&nbsp;&nbsp; &lt;data type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;languageKey index=&quot;default&quot; type=&quot;array&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;.alttitle&quot;&gt;Module title&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;.description&quot;&gt;<br/>            This part describes the module and is also shown<br/>            when hovering over the CSH icon [hover]<br/>         &lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;.syntax&quot;&gt;<br/>            This part is a predefined section and<br/>            can be used to demonstrate coding syntax.<br/>         &lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;mod_itemname.alttitle&quot;&gt;Item title&lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;mod_itemname.description&quot;&gt;<br/>            This part describes a certain item [hover]<br/>         &lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;mod_itemname.details&quot;&gt;<br/>            This part gives more details of the item<br/>         &lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label index=&quot;mod_itemname.image&quot;&gt;<br/>           EXT:myextkey/res/imagefile.png<br/>         &lt;/label&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/languageKey&gt;<br/>&nbsp;&nbsp; &lt;/data&gt;<br/>&lt;/T3locallang&gt;</pre>
+	<p>Next, add a CSH item to the content of the module. Of course you can have more than one item:
+	</p>
+	<pre>$content .= t3lib_BEfunc::cshItem(<br/>&nbsp;&nbsp; '_MOD_'.$GLOBALS['MCONF']['name'],<br/>&nbsp;&nbsp; 'mod_'.$str,<br/>&nbsp;&nbsp; $GLOBALS['BACK_PATH'],<br/>&nbsp;&nbsp; '|',<br/>&nbsp;&nbsp; FALSE,<br/>&nbsp;&nbsp; 'margin-bottom:0px;'<br/>);</pre>
+	<p>The function <a
+			href="http://www.typo3-unleashed.net/typo3apidocs/typo3api_4.2.5/html/d9/de0/classt3lib__BEfunc.html#0367d1b87897e560e62bbb843f56c865"
+			title="Source code documentation of the TYPO3 API" class="external-link">cshItem() is well documented inside
+		the source code</a>. I was lazy and simply copied the descriptions from the sources:
+	</p>
+	<pre>string &nbsp; Table name ('_MOD_'+module name)<br/>string&nbsp;&nbsp; Field name (CSH locallang main key)<br/>string &nbsp; Back path<br/>string &nbsp; Wrap code for icon-mode, splitted by &quot;|&quot;.<br/>         Not used for full-text mode.<br/>boolean &nbsp;If set, the full text will never be shown (only icon).<br/>         Useful for places where it will break the page<br/>         if the table with full text is shown.<br/>string &nbsp; Additional style-attribute content<br/>         for wrapping table (full text mode only) </pre>
+	<p>Finally add a reference to ext_tables.php to tell the extension manager about the CSH:
+	</p>
+	<pre>t3lib_extMgm::addLLrefForTCAdescr(<br/>   '_MOD_tools_txmyextkeyM1',<br/>   'EXT:myextkey/locallang_csh_txmyextkey.xml'<br/>);</pre>
+	<p>That's all you need to do for a backend module. You can find out more about CSH in the <a
+			href="http://typo3.org/documentation/document-library/core-documentation/doc_core_inside/4.2.0/view/2/9/"
+			title="Chapter about CSH in Inside TYPO3 (Core Architecture) at typo3.org" class="external-link">Inside
+		TYPO3</a> documentation.
+	</p>
+</section>
+
+{% include post-taglist.html %}

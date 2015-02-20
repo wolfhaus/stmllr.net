@@ -1,0 +1,246 @@
+---
+layout: post
+title: Summary of the TYPO3 PackageBuilder code sprint in Freiburg
+date: 2012-11-14 22:48
+excerpt: The TYPO3 PackageBuilder team recently met in Freiburg for a three day code sprint. The outcome was big step towards a new user interface, a refactored code base for integrating new features and a clear vision for the future.
+tags: 
+  - TYPO3
+  - Community
+  - Freiburg
+  - CodeSprint
+  - ExtensionBuilder
+  - PackageBuilder
+---
+
+<section>
+	<h3>About the ExtensionBuilder and PackageBuilder</h3>
+
+	<p><img title="ExtensionBuilder" src="/files/images/RTEmagicC_ExtensionBuilder-modeler.png.png" height="188"
+			width="300" alt=""/></p>
+
+	<p>The ExtensionBuilder is a product of the TYPO3 community, which enables&nbsp;developers to create TYPO3 Extbase
+		Extensions using a graphical user interface called the modeler. The modeler allows you to rapidly create&nbsp;Extensions
+		using Domain Driven Design principles. It delivers high&nbsp;quality and ready-to-use source code. It also
+		features the editing of&nbsp;existing Extensions, which is a key feature for agile development&nbsp;approaches.
+	</p>
+
+	<p>In the current situation the ExtensionBuilder only supports TYPO3 CMS&nbsp;extensions, although more products of
+		the TYPO3 family could benefit&nbsp;from this tool. Since the code base of the user interface and also the&nbsp;underlying
+		PHP code have reached the end of scalability, the decision&nbsp;was to create a new product called
+		PackageBuilder. One of the goals for&nbsp;the new PackageBuilder is to support multiple target frameworks like&nbsp;TYPO3
+		CMS, Flow and Neos.
+	</p>
+
+	<p>Another goal is to introduce a new user&nbsp;interface design, integrated with Emberjs, jQuery and SCSS.
+	</p>
+
+	<h3>Project team</h3>
+	<ul>
+		<li>Nico de Haen, team leader (<a href="https://twitter.com/t3ndh" title="Nico at Twitter"
+										  class="external-link">@t3ndh</a>)
+		</li>
+		<li>Rens Admiraal, co-leader (<a href="https://twitter.com/renst3" title="Rens at Twitter"
+										 class="external-link">@renst3</a>)
+		</li>
+		<li>Hans Christian Reinl (<a href="https://twitter.com/drublic" title="Hans at Twitter" class="external-link">@drublic</a>)
+		</li>
+		<li>Thomas Maroschik (<a href="https://twitter.com/tom_noise" title="Tom at Twitter" class="external-link">@tom_noise</a>)
+		</li>
+		<li>Steffen Müller (<a href="https://twitter.com/t3node" title="Steffen at Twitter" class="external-link">@t3node</a>)
+		</li>
+	</ul>
+	<p>The CodeSprint attracted two new active project members:</p>
+	<ul>
+		<li>Philipp Maier</li>
+		<li>Nicki Uhlbach (<a href="https://twitter.com/nimius_design" title="Nicki at Twitter" class="external-link">@nimius_design</a>)
+		</li>
+		<li>... and Henjo Hoeksma (<a href="https://twitter.com/henjohoeksma" title="Henjo at Twitter"
+									  class="external-link">@henjohoeksma</a>) changed his status from inactive to
+			active.
+		</li>
+	</ul>
+	<p>&nbsp;<img src="/files/images/PackageBuilder-Team.jpg" height="236" width="420" alt=""/>
+	</p>
+
+	<h3>Output Strategy</h3>
+
+	<p>The code sprint started with a discussion about the big picture and the corresponding conceptual and
+		architectural topics. We are aiming for greater extensibility and flexibility to support multiple platforms. We
+		needed to decide on changing the file structure because the current architecture was not flexible enough yet.
+		Although TYPO3 Extbase was derived from TYPO3 Flow, the file structures have diverged in some aspects.
+	</p>
+
+	<p><img title="Developing a Strategy " src="/files/images/PackageBuilder-Architecture.jpg" height="236" width="420"
+			alt=""/></p>
+
+	<p>How to design and implement the classes handling the output? During this discussion Henjo suggested to introduce
+		strategies. We mainly have two of them in the base package: a TYPO3 CMS strategy and a TYPO3 Flow strategy
+		including Neos. The refactoring we decided on will actually support registering new strategies to this list.
+		Imagine new strategies to be published on the web like Symfony2, yuml.me or ArgoUML for example. The current
+		idea is to support different kind of outputs for the package you're working on, basically expanding the target
+		group of the PackageBuilder a lot.
+	</p>
+
+	<p>Since the plan for this year is to release an alpha version, we were only refactoring the basic structure. The
+		full feature for registering new strategies will be implemented (and documented) in a later release. For now
+		each strategy can be registered by just adding an entry to TYPO3.PackageBuilder.strategyProvider in
+		Settings.yaml
+	</p>
+
+	<h3>PHP Parser</h3>
+
+	<p>The ExtensionBuilder allows to edit existing classes when changing the model. The editing is done using a regular
+		expression based parser. Although it works fine, it is already too complex and lacks of extensibility. So we
+		started to integrate a PHP parser for creating class objects from pure PHP template classes. The parser was
+		originally written by Nikita Popov and extended by Thomas Maroschik. Nico de Haen finally embedded it into an
+		API. The <a href="https://github.com/nicodh/php_parser_api/tree/flow3_package" title="Project Pages on GitHub"
+					class="external-link">Parser API</a> including the documentation can be found on github.
+	</p>
+
+	<h3>TYPO3.Ice</h3>
+
+	<p><a href="https://github.com/radmiraal/TYPO3.Ice" title="TYPO3.Ice package at github" class="external-link">TYPO3.Ice</a>
+		is a package offering you an easy way to create an IDE like user interface and is derived from the TYPO3
+		FormBuilder. We use TYPO3.Ice as the foundation of the Package Builder. Further work on Ice will be done, like
+		making it fully structured like Emberjs, and implementing the server communication.<br/><br/>First of all, the
+		TYPO3.Ice package was cleaned up a lot. Thomas Maroschik and Rens Admiraal had a brainstorming session about how
+		to store the actual data in the workspace, how to handle a history and how data handling could support
+		collaborative editing. The outcome was, that CQRS and event sourcing seem to be a promising approach for that.
+		By storing commands in localStorage and syncing them with the server we can simply support versioning, and far
+		easier recognize changed property names in the model for example. The support for this command store will be
+		build into TYPO3.Ice making it available for us in other community packages.
+	</p>
+
+	<h3>User Interface</h3>
+
+	<p><img title="PackageBuilder Modeler" src="/files/images/RTEmagicC_PackageBuilder-modeler.png.png" height="161"
+			width="300" alt=""/></p>
+
+	<p>The frontend got a rework with help of our new designer Nicki Uhlbach and is now much cleaner and easier to
+		handle. The modeler now has sophisticated support for storing data in the browser's localStorage which helps us
+		with further implementation of restoring built extensions. Having Nicki on the team is of great value as
+		developers normally ain't that good in user interfaces and designs. Hans Christian Reinl already started
+		implementing the design, leading to a much improved user experience.
+	</p>
+
+	<p>When it comes to handling large domain models, the ExtensionBuilder always had one disadvantage: The lack of
+		overview. Once the domain model exceeded a certain amount of models, it became difficult to maintain. Relations
+		were hard to connect and the panel was generally overloaded with model fields.<br/><br/>In order to optimize the
+		user experience, zooming now comes along with the Package Builder. With zooming, we effectivly fix one of the
+		most common problems users were experiencing with the ExtensionBuilder. Users are now able to get a full view on
+		their domain models as well as a detail view. They can experience a whole other level of control about their
+		domain model.
+	</p>
+
+	<h3>Behavior Driven Development</h3>
+
+	<p>Steffen Müller started to create functional test scenarios for key features of the web interface. It turned out
+		to be more difficult than expected, because the chosen BDD framework Behat/Mink was not stable enough for our
+		use cases. However the goal is still to create test scenarios, but a different framework should be evaluated.
+		Cucumber could be a candidate.
+	</p>
+
+	<h3>Integrating the PackageBuilder into TYPO3 CMS</h3>
+
+	<p>The new PackageBuilder is built as a TYPO3 Flow package. To backport it to TYPO3 CMS, a new TYPO3 Flow Package
+		has been started that creates a standalone version of the PackageBuilder. This will allow to ship it within a
+		classic extension and integrate it into the TYPO3 CMS Backend.
+	</p>
+
+	<h3>Preview</h3>
+
+	<p>If you want to have a look at the actual state, use the <a
+			href="https://github.com/nicodh/BaseDistribution_TYPO3.PackageBuilder"
+			title="PackageBuilder Distribution Package at github" class="external-link">PackageBuilder
+		Distribution-Package</a> and install it using composer. It will install TYPO3 Flow and all dependent packages. A
+		short howto can be found in the <a href="http://forge.typo3.org/projects/package-packagebuilder/wiki"
+										   title="PackageBuilder wiki at forge" class="external-link">PackageBuilder
+			Wiki</a>.
+	</p>
+
+	<p><img src="/files/images/PackageBuilder-Frontend.jpg" height="180" width="320" alt=""/>
+	</p>
+
+	<h3>Result</h3>
+
+	<p>The PackageBuilder will be more feature packed, more advanced and an even greater joy to use then envisioned
+		before. Great stuff happen when great minds join forces. This CodeSprint was some nice community work!
+	</p>
+
+	<h3>Sponsors</h3>
+
+	<p>WWe received great support from a number of TYPO3 agencies. The sponsoring included travel costs, workspace,
+		accomodation, drinks and food. We like to say thank you to:</p>
+	<ul>
+		<li><a href="http://www.aoemedia.com/" title="AOE media" class="external-link">AOE media</a></li>
+		<li><a href="http://beech.it/" title="beech.it" class="external-link">beech.it</a></li>
+		<li><a href="http://www.dkd.de/" title="dkd Internet Service" class="external-link">dkd Internet Service</a>
+		</li>
+		<li><a href="http://gebruederheitz.de/" title="/gebrüderheitz - TYPO3 Agentur Freiburg" class="external-link">/gebrüderheitz</a>
+		</li>
+		<li><a href="http://www.ndh-websolutions.de/" title="ndh-websolutions"
+			   class="external-link">ndh-websolutions</a></li>
+		<li><a href="http://www.netzloesungen.de/" title="netzloesungen" class="external-link">netzloesungen</a></li>
+	</ul>
+</section>
+
+<section>
+	<h3>Related articles</h3>
+	<ul>
+		<li><a href="/blog/2012-10-30-announcing-another-typo3-code-sprint-in-freiburg.html">Announcing another TYPO3
+			Code Sprint in Freiburg</a> (
+			<time>October 30, 2012</time>
+			)
+		</li>
+		<li><a href="/blog/2012-07-24-report-from-the-typo3-freiburg-code-sprint.html">Report from the TYPO3 Freiburg
+			code sprint </a> (
+			<time>July 24, 2012</time>
+			)
+		</li>
+		<li><a href="/blog/2012-07-03-typo3-code-sprint-in-freiburg-germany-in-july-2012.html">TYPO3 Code Sprint in
+			Freiburg / Germany in July 2012</a> (
+			<time>July 3, 2012</time>
+			)
+		</li>
+	</ul>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments">
+	<h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">KimPixel</span>
+			<time class="comment-time" datetime="2013-01-15 01:21">on January 15, 2013 at 01:21</time>
+			<p>
+				Like Like ....<br/>
+				<br/>
+				I tried to install the dist. but a class is not load.<br/>
+				<br/>
+				Fatal error: Class 'PHPParser_NodeTraverser' not found in<br/>
+				XXX\Packages\Application\TYPO3.ParserApi\Classes\TYPO3\ParserApi\Parser\Traverser.php<br/>
+				on line 32<br/>
+				<br/>
+				on Windows 7 (xampp)
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-01-15 12:21">on January 15, 2013 at 12:21</time>
+			<p>
+				Hi KimPixel,<br/>
+				<br/>
+				the PackageBuilder is still under heavy development so chances are that things do not work as stable as
+				expected.<br/>
+				<br/>
+				I would suggest you open a bug report in the PackageBuilder issue tracker on github: <a
+					href="https://github.com/nicodh/TYPO3.PackageBuilder/issues">https://github.com/nicodh/TYPO3.PackageBuilder/issues</a><br/>
+
+			</p>
+		</li>
+
+	</ol>
+</section>

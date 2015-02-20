@@ -1,0 +1,126 @@
+---
+layout: post
+title: Security in TypoScript - Applying stdWrap functions like htmlSpecialChars to data in dataWrap
+date: 2010-02-04 10:25
+excerpt: A frequently used feature of TypoScript is stdWrap. It provides many functions and wrappers to parse your data. It serves as a multipurpose parsing suite with helpers of any kind. dataWrap is one of the most powerful among them, but it's also one of the most tricky ones. Read on for a little demonstration on how to add security to your TypoScript by applying the stdWrap function "htmlSpecialChars" to data in dataWrap...
+tags: 
+  - TypoScript
+  - Security
+  - stdWrap
+  - dataWrap
+  - htmlSpecialChars
+  - Limitations
+  - TYPO3
+---
+
+<section>
+	<h3>Introduction</h3>
+
+	<p>Last night I was having a security session on a community website. Some content was controlled by TypoScript and
+		I did some penetration tests on Cross-Site Scripting (XSS).
+	</p>
+
+	<p>The website allows anyone to register and enter data to be shown on the website. The threat was that a possible
+		attacker could create an account and enter malicious data.
+	</p>
+
+	<p>There were two possibilities to protect the website from being XSSed:</p>
+	<ul>
+		<li>1. validate and filter the user data before it gets saved,</li>
+		<li>2. escape and filter the user data before it gets displayed on the website.</li>
+	</ul>
+	<h3>Adding XSS protection in TypoScript</h3>
+
+	<p>Let's have a look at the second step where TypoScript comes into the match. For testing purpose I put the
+		following malicious data into the DB fields:
+	</p>
+	<pre>&lt;script&gt;alert('fieldname')&lt;/script&gt;</pre>
+	<p>Whenever the data is not escaped before being displayed, an alert window pops up reporting the fieldname.
+	</p>
+
+	<p>The website makes heavy use of dataWrap to show the data in the frontend. The cool thing with dataWrap is, that
+		it allows to shrink your TypoScript code by putting multiple getText requests into a one liner. Have a look at
+		the first example:
+	</p>
+	<h4>Example 1</h4>
+	<pre>page.10 = TEXT<br/>page.10 {<br/>  dataWrap = Hello {field:title} {field:firstname} {field:lastname}<br/>}</pre>
+	<p>The output of a regular dataset here would be: <i>Hello Dr. Franken Stein</i>. But when testing a malicious
+		dataset with &lt;script&gt;alert('fieldname')&lt;/script&gt; I ran into XSS with popups all around.
+	</p>
+
+	<p>So the next step was to remove all bad code from the result set. I decided to use htmlSpecialChars:
+	</p>
+	<h4>Example 2</h4>
+	<pre>page.10 = TEXT<br/>page.10 {<br/>  dataWrap = Hello {field:title} {field:firstname} {field:lastname}<br/>  htmlSpecialChars = 1<br/>}</pre>
+	<p>My expectation was that the complete string would be parsed through htmlspecialchars(). If there was malicious
+		data in the name fields, it would get escaped. But testing the stuff revealed the same behaviour as in example
+		1: The field data was not escaped with htmlspecialchars and I ended up with javascript alerts popping around on
+		my screen. Next, I tried a different approach:
+	</p>
+	<h4>Example 3</h4>
+	<pre>page.10 = TEXT<br/>page.10.value = Hello<br/>page.20 = TEXT<br/>page.20 {<br/>  field = title<br/>  htmlSpecialChars = 1<br/>}<br/>page.30 {<br/>  field = firstname<br/>  htmlSpecialChars = 1<br/>}<br/>page.40 {<br/>  field = lastname<br/>  htmlSpecialChars = 1<br/>}</pre>
+	<p>This time, testing was successful: All HTML data was escaped and no popups: The result was again <i>Hello Dr.
+		Franken Stein</i> and <i>Hello &lt;script&gt;alert('title')&lt;/script&gt; &lt;script&gt;alert('firstname')&lt;/script&gt;
+		&lt;script&gt;alert('lastname')&lt;/script&gt;</i> as plain text with escaped characters.
+	</p>
+
+	<p>The drawback was that the code was bloated. I tried to shrink it by switching back from field to dataWrap. And
+		this time I tried a different approach to apply htmlSpecialChars:
+	</p>
+	<h4>Example 4</h4>
+	<pre>page.10 = COA<br/>page.10.stdWrap.htmlSpecialChars = 1<br/>page.10.10 = TEXT<br/>page.10.10.dataWrap = Hello {field:title} {field:firstname} {field:lastname}</pre>
+	<p>... and Bingo: No popups, all fields were correctly parsed through htmlspecialchar().
+	</p>
+
+	<h3>Summary</h3>
+
+	<p>Although example 2 appeared logical to me, it did not work. The reason was that the getText sections in dataWrap
+		were not being touched by surrounding stdWrap functions. As example 4 showed, the solution was to use COA as a
+		container for the data. That made it possible to wrap the complete string with htmlSpecialChars.
+	</p>
+
+	<p>What's the lesson learned of this case?
+	</p>
+
+	<p>Never trust your intuitive expectation of how code works when it comes to security issues. Better test twice than
+		overlook a leak. <b>Test driven development is the way to go.</b>
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+
+<section class="comments">
+	<h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://blog.martinholtz.de" rel="external">maholtz</a></span>
+			<time class="comment-time" datetime="2010-02-04 14:20">on February 04, 2010 at 14:20</time>
+			<p>
+				page.10.stdWrap.dataWrap = Hello {field:title} {field:firstname} {field:lastname}<br/>
+				<br/>
+				thats the solution for example2!<br/>
+				<br/>
+				because htmlSpecialChars is executed before dataWrap, but stdWrap is executed before
+				htmlSpecialChars:)<br/>
+				<br/>
+				IMHO it is important to understand, that the order or the properties are called in that order. So in
+				many
+				cases you can change the order with calling stdWrap.yourProperty.<br/>
+				<br/>
+				But thanks for this summary anyway:)
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">MasterYin</span>
+			<time class="comment-time" datetime="2010-02-04 15:49">on February 04, 2010 at 15:49</time>
+			<p>
+				Really good work, thx a lot.<br/>
+				I will directly use it. :)
+			</p>
+		</li>
+
+	</ol>
+</section>

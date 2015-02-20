@@ -1,0 +1,15 @@
+# Site settings
+title: Personal blog of Steffen Müller
+description: Personal blog by Steffen Müller about web, software development and TYPO3
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "https://stmllr.net" # the base hostname & protocol for your site
+twitter_username: stmllr
+github_username:  stmllr
+permalink: /blog/:title/index.html
+tag_dir: tags
+paginate: 10
+
+# Build settings
+markdown: kramdown
+sass:
+  style: :compressed

@@ -1,0 +1,163 @@
+---
+layout: post
+title: Book review of "TYPO3 Extension Development" by Dmitry Dulepov
+date: 2009-03-27 23:19
+excerpt: The market for english books on TYPO3 is still very thin - compared to german books. This possibly depends on the great popularity TYPO3 enjoys in germany. Unfortunately a lot of these german books are oversized. Few of them are concentrating on one audience (editors, administrators, developers) and their specific task, but covering the full range of topics on TYPO3. For a TYPO3 extension developer that meant to skip 3/4 of the content of most books. In contrast, "TYPO3 Extension Development" by Dmitry Dulepov, recently published by Packt Publishing has chosen a different approach.
+tags: 
+  - TYPO3
+  - Extension development
+  - Extensions
+  - Community
+  - Book review
+---
+
+<section>
+	<img alt="Book cover image" src="/files/images/RTEmagicC_dmitry_book_cover_01.jpg.jpg" width="120" height="148"/>
+
+	<p><a href="http://www.packtpub.com/typo3-extension-development" title="Book presentation by Packt publishing"
+		  class="external-link">Dulepov, Dmitry (2008): TYPO3 Extension Development : Developer's guide to creating
+		feature rich extensions using the TYPO3 API. Birmingham: Packt Publishing</a></p>
+
+	<h3>First impression</h3>
+
+	<p>The first positive impression when unpacking the book was that it covered only 217 pages. It was looking like a
+		book, which can be read entirely without getting tired of stuff you don't want to read anyway. As the title
+		implies, the book addresses TYPO3 extension developers, especially those without much experience in extension
+		development.<br/>It guides the reader through the complete process of extension development, covering both
+		frontend plugins and backend modules with well-chosen real world examples. <br/>Although I feel quite familiar
+		with the task of extension development, I was surprised that the book still revealed some gems of extension
+		development for me, especially the in-depth study of frontend plugins (chapter 5). But more on that later.
+	</p>
+
+	<h3>Book structure</h3>
+
+	<p> The <a href="http://www.packtpub.com/article/typo3-extension-development-table-of-contents"
+			   title="Table of contents of the book" class="external-link">book is well structured</a>, starting with
+		general topics on hacking with TYPO3 and getting more and more specific to the end. This reminded me of the <a
+				href="http://dmitry-dulepov.com/article/slides-from-productivity-session.html"
+				title="Slides of the productivity session on TYPO3 developer days 2008" class="external-link">talks
+			Dmitry held at T3DD08</a>, which were also very well organized and easy to follow.
+	</p>
+
+	<h3>Chapter 1 (&quot;About TYPO3 API&quot;)</h3>
+
+	<p>The first chapter concentrates on TYPO3 API. Since the API is very huge, the chapter concentrates on the some
+		relevant topics, leaving out unnecessary details which anyway could be found on the <a
+				href="http://typo3.org/documentation/document-library/" title="Documentation section on typo3.org"
+				class="external-link">official documentation on typo3.org</a> or any <a href="/typo3api/trunk/"
+																						title="TYPO3 API documentation hosted on this website">doxygen
+			created API docs</a>. It's flavored with some code examples which helps to understand the use of the
+		discussed items. Since this is the first chapter of the book, I would have expected a more general introduction
+		in the task of extending TYPO3, especially for the unexperienced user.
+	</p>
+
+	<h3>Chapter 2 (&quot;Anatomy of a TYPO3 extension&quot;)</h3>
+
+	<p>The second chapter discusses the usual files inside an extension. It rather addresses people which are new to
+		TYPO3 extension development, giving an overview about the purposes and uses of extension files and directories.
+		Nevertheless it covers the mandatory knowledge for the following chapters.
+	</p>
+
+	<h3>Chapter 3 (&quot;Planning Extensions&quot;)</h3>
+
+	<p>If you have already heard about the author <a href="http://dmitry-dulepov.com/"
+													 title="Personal blog by Dmitry Dulepov" class="external-link">Dmitry
+		Dulepov</a> and follow his blog, you'll probably won't be surprised about chapter 3. Dmitry doesn't hide his
+		passion for elaborate planning. Consequently, this topic got a separate chapter. It guides you through general
+		and TYPO3 specific planning questions, which need some thinking before starting to code. In practice the chapter
+		describes the goals of the example extension, which will be coded in the following chapters. So don't fear to be
+		confronted with boring theoretical stuff, but with tips which help to code standard-compliant extensions.
+	</p>
+
+	<h3> Chapter 4 (&quot;Generating Extensions&quot;)</h3>
+
+	<p>This chapter is a guide on how to use the <a
+			href="http://typo3.org/extensions/repository/view/kickstarter/current/"
+			title="Kickstarter in the extension repository on typo3.org" class="external-link">extension kickstarter</a>
+		for generating the base structure of an extension. Like chapter 2 it also addresses people without or with less
+		experience in extension development. Screenshots and their description explain the main sections of the
+		kickstarter. Unfortunately only some parts of the kickstarter are discussed. Creating services and clickmenu
+		items for example are not, which personally left me with a mixed feeling. If you depend on these kind of
+		extension features, you'll have to search elsewhere for the necessary information. Fortunately, <a
+				href="http://buzz.typo3.org/people/francois-suter/" title="Blog by Francois Suter"
+				class="external-link">François Suter</a> has recently published a completely rewritten <a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_services/current/"
+				title="Official documentation of TYPO services" class="external-link">manual about TYPO3 services</a>.
+	</p>
+
+	<h3> Chapter 5 (&quot;Frontend-Plugin: An In-Depth Study&quot;)</h3>
+
+	<p>Chapter 5 focuses on some particular parts of a TYPO3 extensions. These are plugin configuration, templating,
+		localizing and caching, which are essential for frontend plugins. Each part and its particular difficulties are
+		explained and demonstrated with code examples. Some of you probably got in contact with the deep jungle of TYPO3
+		caching, especially when reading the article <a
+				href="http://typo3.org/development/articles/the-mysteries-of-chash/"
+				title="Article about cHash by Kasper Skårhøj" class="external-link-new-window">&quot;Mysteries of cHash&quot;</a>
+		again and again, trying to finaly understand it. Dmitry manages to blaze a trail through that jungle with
+		concise explanations and best practice examples. The only drawback in the caching chapter is a mistake in the
+		noncached plugin example on page 111: it comes with <a
+				href="http://typo3.org/documentation/document-library/references/doc_core_tsref/4.2.0/view/1/8/#id4292524"
+				title="Chapter about USER and USER_INT object in TSref" class="external-link">USER instead of
+			USER_INT</a>. The alert reader will notice.
+	</p>
+
+	<h3> Chapter 6 (&quot;Programming Frontend Plugins&quot;)</h3>
+
+	<p>This section is the longest part of the book and discusses the coding of crucial parts of a plugin. It does so by
+		using an example extension which presents website users. The reader learns how to create single and list views
+		by writing and linking together PHP code, HTML templates, TS and FlexForm configuration and a simple (but very
+		cool) AJAX portion. It's amazing to see how Dmitry manages to code rich features with that few lines of code. My
+		favorite part is the use of stdWrap inside PHP.
+	</p>
+
+	<h3> Chapter 7 (&quot;Programming Backend Plugins&quot;)</h3>
+
+	<p>Chapter 7 is divided into two parts: database access by <a
+			href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/4/1/"
+			title="Chapter about TCA in the official TYPO3 core API documenation" class="external-link">TCA (TYPO3
+		configuration array)</a> and backend modules. Since most of the TCA parts are created by the kickstarter, the
+		first part is accordingly thin. It describes only the essential parts of TCA. If you are interested in more
+		details, the official <a
+				href="http://typo3.org/documentation/document-library/core-documentation/doc_core_api/4.2.0/view/"
+				title="TYPO3 core API documentation on typo3.org" class="external-link">core API documentation</a> might
+		be a better place to browse. Well, back to Dmitrys book: The second part begins with a short excursion on
+		essential functions for backend modules, followed by a step-by-step howto about implementing a full featured BE
+		module. The example which is used here displays user and page statistics. For my taste this part contains too
+		much code and not enough explanation.
+	</p>
+
+	<h3>Chapter 8 (&quot;Finalizing Extensions&quot;)</h3>
+
+	<p>The last chapter leads the user through the documentation and publication process of an extension. A checklist
+		helps to increase the overall quality of the extension.
+	</p>
+
+	<h3>Index</h3>
+
+	<p> The book closes with an index, which is far too short. My first impression was that a page was missing in the
+		book, but then I realized that the letters G, H, I, J, K, M, N ,O simply don't have any record in the index.
+		That was very disappointing!
+	</p>
+
+	<h3>Conclusion</h3>
+
+	<p>My overall impression of the book is that it contains many best practices in extension programming. It covers
+		essential knowledge for coding a frontend extension with various features. Unfortunately the backend module part
+		is too thin. Considering that the TYPO3 backend code is ugly and the API is hard to understand, this part should
+		have deserved more attention. But altogether the book leaves the impression of a solid guide for extension
+		developers. It was quite amusing to read because of its real-world examples. Finaly, don't forget to have a look
+		at the various <a
+				href="http://typo3.org/extensions/repository/?tx_terfe_pi1%5Bview%5D=search&amp;no_cache=1&amp;tx_terfe_pi1%5Bsword%5D=dulepov"
+				title="List of Dmitrys extensions" class="external-link">extensions Dmitry published and maintains</a>.
+	</p>
+
+	<h3>My motivation</h3>
+
+	<p>The publisher offered me a free PDF version of the book for writing a review. I rejected because I already had
+		bought one half a year before writing this review. The main reason to write this article is that I appreciate
+		the work of Dmitry for TYPO3 in general and his book in particular. The publisher &quot;honored&quot; my work
+		afterwards with a free book on OOP with PHP by Hasin Hayder, but it turned out to be of poor quality.
+	</p>
+</section>
+
+{% include post-taglist.html %}

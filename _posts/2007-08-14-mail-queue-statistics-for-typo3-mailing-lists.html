@@ -1,0 +1,27 @@
+---
+layout: post
+title: Mail queue statistics for TYPO3 mailing lists
+date: 2007-08-14 01:19
+excerpt: Last sunday, Luc de Louw published more statistics on the TYPO3 mailing lists. We can now peek into some charts about the mail queue.
+tags: 
+  - Statistics
+  - Monitoring
+---
+
+<section>
+	<p>The <a href="http://lists.netfielders.de/cgi-bin/queuegraph.cgi" title="statistics of the postfix queue"
+				   class="external-link">charts</a> give us an impression about how many mails were defered in the
+	postfix queue. You can compare this value with the total amount of incoming/active/delivered mails. This information
+	does neither reveal the reason for queuing or the duration mails spent in the queue. But it gives us a first
+	impression about the server (postfix) load.
+	</p>
+
+	<p><a href="http://buzz.typo3.org/people/luc-de-louw/" title="Blog of Luc de Louw at typo3.org"
+		  class="external-link">Luc</a> seems to like charts, since we already have some <a
+			href="http://lists.netfielders.de/cgi-bin/mailgraph.cgi" title="smtp statistics rendered with mailgraph"
+			class="external-link">postfix statistics</a> of the TYPO3 listserver and some numbers about <a
+			href="http://buzz.typo3.org/people/luc-de-louw/article/is-the-typo3-community-13337/"
+			title="top memberships in the TYPO3 mailing lists" class="external-link">list membership</a>.<br/></p>
+</section>
+
+{% include post-taglist.html %}

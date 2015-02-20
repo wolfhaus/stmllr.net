@@ -1,0 +1,58 @@
+---
+layout: post
+title: addPItoST43? 
+date: 2008-02-20 22:25
+excerpt: TYPO3 sometimes drives me nuts. It happens that I come across cryptic function or property names, using them over and over again without having a clue, what its name stands for. t3lib_extMgm::addPItoST43() is one of them, although it is part of almost a billion TYPO3 extensions...
+tags: 
+  - TYPO3
+  - Extension development
+  - Extensions
+  - FE plugin
+---
+
+<section>
+	<p>Not only that we have the <a
+			href="http://buzz.typo3.org/people/francois-suter/article/typoscript-beauty-or-beast-1/"
+			title="Francois Suter reviews the beautiful optionSplit property of TS" class="external-link">optionSplit
+		beast</a>, but we are hunted by the magic number 43. And we add PI to ST number 43?!
+	</p>
+
+	<p>Today, I had enough and tried to find out, what ST43 stands for. Finally, the <a
+			href="http://typo3.org/fileadmin/typo3api-4.0.0/db/d23/classt3lib__extMgm.html#161d98233f8583d5dd95d1f8548eb2ac"
+			title="t3lib_extMgm Extension manager class reference" class="external-link">source code documentation</a>
+		led the cat out of the bag:</p>
+	<ul>
+		<li><b>Add</b></li>
+		<li><b>PI</b> = Plugin</li>
+		<li><b>to</b> <b>ST</b> = to Static Template</li>
+		<li><b>43</b> = 43 is the uid of the static template 'content.default'</li>
+	</ul>
+	<p>So the function name means: <b>Add PlugIn to Static Template #43</b>.
+	</p>
+
+	<p>Now don't worry if you use css_styled_content instead of static templates: The docs promise it will work
+		anyway.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://typofree.org" rel="external">Michiel Roos</a></span> <time class="comment-time" datetime="2009-05-21 11:53">on May 21, 2009 at 11:53</time>
+			<p>
+				This function couples the class to an entry in the 'list' also known as the cObject 'Insert Plugin'. The second parameter enables or disables cacheing of the plugin.<br />
+<br />
+You do not need to use this archaic function. You can also use the following code in your TS setup.<br />
+<br />
+includeLibs.tx_extension_pi = EXT:extension/pi/class.tx_extension_pi.php <br />
+plugin.tx_extension_pi = USER<br />
+plugin.tx_extension_pi {<br />
+userFunc = tx_extension_pi->main<br />
+}<br />
+tt_content.list.20.extension_pi =< plugin.tx_extension_pi<br />
+			</p>
+		</li>
+	</ol>
+</section>

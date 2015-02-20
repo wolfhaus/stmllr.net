@@ -1,0 +1,59 @@
+---
+layout: post
+title: Styling weblinks with CSS
+date: 2008-01-29 20:34
+excerpt: CSS gives you so many powerful methods of styling weblinks. We not only have pseudo classes to distinguish between visited/unvisited and hovered/activated links, but also those highly configurable attribute selectors to individually style all types of protocols (mailto, https, ...) and document types (pdf, mp3, ...)
+tags: 
+  - HTML
+  - CSS
+---
+
+<section>
+	<p>There are so many different link types in the web, but usually they all come with the same styling.
+	Underlining and coloring seems to be the prefered method.
+	</p>
+
+	<p>The first time I realizied those million ways to apply styles to links, was some years ago, when <a
+			href="http://en.wikipedia.org">Wikipedia </a>started to explicitly tag external links with png icons. Last
+		week I found some time to dig into CSS and attribute selectors and the stuff I saw was amazing. Not only we can
+		style one and the same HTML element with different ids or classes, but also by choosing any other attribute or
+		part of it. On a small scale, a kind of Regex is allowed to differentiate cases more precisely:
+	</p>
+
+	<h3>HTML</h3>
+	<pre>&lt;a href=&quot;http://www.domain.net&quot;&gt;An external link&lt;/a&gt;</pre>
+	<h3>CSS</h3>
+	<pre>a[href^=&quot;http:&quot;] { background: url(ext.png) no-repeat right; }</pre>
+	<p>This will add a little icon on the right side of the link. The attribute selectors [href^=value] limits the style
+		to links starting with <em>http:</em>. If your browser supports CSS2, you can see the <a
+				href="http://en.wikipedia.org/wiki/Effect">effect</a>. Now have a look at the next example:
+	</p>
+
+	<h3>HTML</h3>
+	<pre>&lt;a href=&quot;http://document.pdf&quot;&gt;my Thesis&lt;/a&gt;</pre>
+	<h3>CSS</h3>
+	<pre>a[href$=&quot;.pdf&quot;] { background: url(pdf.png) no-repeat right; }</pre>
+	<p>This will highlight links to pdf documents. The attribute selectors [href$=value] limits the style to links
+		ending with <em>.pdf</em>. And here comes the <a href="/files/examples/example.pdf"
+														 title="Initiates file download" class="download">example</a>.
+	</p>
+
+	<p>Now, that IE7 is going to replace its ugly ancestor, attribute selectors are also supported by the MS empire. The
+		next step seems to be <a href="http://microformats.org/">microformats</a>, which mainly use attributes to
+		semantically markup web content.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+			<li id="comment-1">
+				<span class="comment-author"><a href="http://typofree.org" rel="external">Michiel Roos</a></span> <time class="comment-time" datetime="2009-05-21 11:55">on May 21, 2009 at 11:55</time>
+				<p>
+					Neato! I did now know this was possible.
+				</p>
+			</li>
+		
+	</ol>
+</section>

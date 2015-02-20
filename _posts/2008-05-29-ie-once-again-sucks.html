@@ -1,0 +1,68 @@
+---
+layout: post
+title: IE once again sucks
+date: 2008-05-29 21:57
+excerpt: On some of our websites, we use conditional comments to control CSS hacks for Internet Explorer. If you create static copies of a website (or mirror), never forget that only IE will follow the @import links inside conditional controls - tools like httrack or wget certainly will not, because they know how to behave! This fact cost me almost an hour today.
+tags: 
+  - CSS
+  - Bugs
+---
+
+<section></section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author"><a href="http://www.geonet.org.nz" rel="external">Russell</a></span>
+			<time class="comment-time" datetime="2009-05-26 01:04">on May 26, 2009 at 01:04</time>
+			<p>
+				Hi there, an old post I know. Did you ever get wget/httrack to fetch IE specific CSS from IE's
+				conditional comments?
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-05-26 10:17">on May 26, 2009 at 10:17</time>
+			<p>
+				Sorry Russell, I did not. If you ever find a solution, please leave a comment about it.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Thomas Worm</span>
+			<time class="comment-time" datetime="2012-09-05 18:31">on September 05, 2012 at 18:31</time>
+			<p>
+				You can use HTTrack's "extended parsing" and put a fake JavaScript in your site. This looks like:<br/>
+				<br/>
+<pre><code><br/>
+	&lt;!-- CSS fixes for IE in offline version --&gt;<br/>
+	&lt;!--[if gte IE 6]&gt;<br/>
+	&lt;link rel="stylesheet" type="text/css" href="/fileadmin/templates/styles/ie6.css" media="all" /&gt;<br/>
+	&lt;![endif]--&gt;<br/>
+	&lt;!--[if gte IE 7]&gt;<br/>
+	&lt;link rel="stylesheet" type="text/css" href="/fileadmin/templates/styles/ie7.css" media="all" /&gt;<br/>
+	&lt;![endif]--&gt;<br/>
+	&lt;!--[if gte IE 9]&gt;<br/>
+	&lt;link rel="stylesheet" type="text/css" href="/fileadmin/templates/styles/ie9.css" media="all" /&gt;<br/>
+	&lt;![endif]--&gt;<br/>
+	&lt;script type="text/javascript"&gt;<br/>
+	function fakeForHTTrack() {<br/>
+	location.href = 'fileadmin/templates/datev/styles/ie6.css';<br/>
+	location.href = 'fileadmin/templates/datev/styles/ie7.css';<br/>
+	location.href = 'fileadmin/templates/datev/styles/ie9.css';<br/>
+	}<br/>
+	&lt;/script&gt;<br/>
+</code></pre>
+			<br/>
+			<br/>
+			HTTrack then finds the files in the faked JavaScript funktion and will download them. It's a really dirty
+			workaround but it works.
+			</p>
+		</li>
+
+	</ol>
+</section>

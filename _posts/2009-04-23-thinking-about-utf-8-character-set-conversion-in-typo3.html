@@ -1,0 +1,274 @@
+---
+layout: post
+title: Thinking about UTF-8 character set conversion in TYPO3
+date: 2009-04-23 10:45
+excerpt: UTF-8 seems to become more and more popular as a character set used with TYPO3. Changing the charset of a system can be tricky and there are a lot of traps. Lots of mailing list requests prove that. Here's are some general thoughts about the subject (no howto!).
+tags: 
+  - TYPO3
+  - UTF-8
+  - character set
+  - MySQL
+---
+<section>
+	<p> If you have ever tried to convert your character set to UTF-8 and end up with strange charcters like <img
+		src="/files/images/questionmark.gif" height="15" width="12" alt=""/>, then you are not alone. I was trapped in
+	that jungle more than once.
+	</p>
+
+	<p>There are lots of tutorials, howtos, blog postings and documentations around which aim to help you converting a
+		character set to UTF-8. Some are more helpful, some are less. But all have something in common: They have been
+		written without considering how <i>your</i> system is configured. Analyzing your individual environment paired
+		with a deep understanding of your components will probably serve much better than trial-and-error snippets. I'll
+		try to give you an impression what that could mean.
+	</p>
+
+	<h3>Taking all components and their interaction into account</h3>
+
+	<p>The architecture of a TYPO3 system is complex, since it consists of independent components, which are even
+		interchangeable. The following questions are essentials when thinking about character set conversion:</p>
+	<ul>
+		<li><b>Operating system</b> (Win, Linux, *BSD, ...): What's the default charset of your OS? Does it support
+			UTF-8?
+		</li>
+		<li><b>Filesystem</b>: What charset do the files have? Is it used consistently or mixed?</li>
+		<li><b>Webserver</b>: Which charset is used for serving static files?</li>
+		<li><b>Database</b>: This one is the most complex. The DB has various components, which can come with different
+			charsets:<br/><br/>
+			<ul>
+				<li>Client: Which charset does the client use to display/process data?</li>
+				<li>Server: How does the server store the data?</li>
+				<li>Connection: What charset is used for data transfer?</li>
+				<li>...</li>
+			</ul>
+		</li>
+		<li><b>PHP</b>: There is a bunch of modules, which try to help with on-the-fly charset conversion: recode,
+			mbstring, iconv, ... Which one you have, depends if the module is available for your PHP version and if it's
+			enabled.
+		</li>
+		<li><b>TYPO3</b>: What version do you use? What charset configuration?</li>
+		<li><b>The whole stuff mixed together</b>: What charset do the components use to interact with each other?</li>
+		<li>...</li>
+	</ul>
+	<p>Uff, much stuff! But this is just a loose and incomplete collection of items. I stopped brainstorming after a few
+		minutes. I am sure there's much more to think (and write) about. I will not give you advices what things to do
+		or not to do. As I already mentioned, there's a lot of writing out there in the web.
+	</p>
+
+	<h3>Demonstrating my favorite issue</h3>
+
+	<p>This one was really tricky to find out. And it serves as a great example, how complex things can be:
+	</p>
+	<h4>Updating from TYPO3&nbsp;4.1 (and earlier versions) to 4.2 (and later)</h4>
+
+	<p>Some DB fields in 4.1 are of type BLOB (for example the TS templates). Most of these fields get converted to TEXT
+		in 4.2. Now think about the following scenario, which seems to be common. The template was saved using TYPO3 4.1
+		and a DB using latin1 (ISO-8859-X) as charset. Then the DB converted to UTF-8 and TYPO3 was configured
+		accordingly. You think you're finished because everything works will. But in most cases, there's still some
+		latin1 formatted data in the BLOB fields. You just don't see. Once you upgrade TYPO3 to 4.2, these BLOBs get
+		converted to TEXT, assuming the data is UTF-8. But it's latin1, because BLOB was not converted before. The
+		result is a broken template. Lots of people in the mailing lists complain about whole parts missing. The reason
+		is invalid non ascii characters (like umlauts äöüé¢ etc), which break the template view.
+	</p>
+	<h4>How to avoid that?</h4>
+
+	<p>If you change the charset of TYPO3 and/or your DB, convert those BLOB fields which would have been changed by the
+		TYPO3 update to TEXT <b>before</b> converting the charset or make sure to convert the BLOB data otherwise.
+	</p>
+
+	<h3>Lessons learned?</h3>
+	<ul>
+		<li>Don't believe that using snippets from the web will fit your needs 100%. Even if they are written by someone
+			with good reputation and rated well, chances are that your system behaves different.
+		</li>
+		<li>Structured Analysis paired with sufficient knowledge about CMS components are the best basis for successful
+			administration. Trial-and-error will not always lead to a lucky punch and can be very disappointing.
+		</li>
+		<li>Character set conversion is a complex task, even for the experienced administrators. Complex tasks are
+			time-consuming, so calculate generously.
+		</li>
+		<li>Design flaws can cause a disaster which might come up at a point you can't foresee. Using BLOB for text in
+			databases is such a design flaw.
+		</li>
+	</ul>
+	<h3>Finaly, a tiny helper extension</h3>
+
+	<p>Sometimes it's not easy to find out what charset TYPO3 uses when connecting to MySQL. Asking for help, you
+		probably will be advised to provide the output of
+	</p>
+	<pre>SHOW VARIABLES LIKE '%CHARACTER_SET%';</pre>
+	<p>But if you do that on the command line (using the mysql client) or in phpmyadmin, you might get a different
+		result than TYPO3 would produce.
+	</p>
+
+	<p>I have written a tiny <a href="http://typo3.org/extensions/repository/view/sm_charsethelper/current/"
+								title="Extension in TER at typo3.org" class="external-link">charset helper extension</a>,
+		which shows the results from a true TYPO3 point-of-view (by using standard TYPO3 DB functions). It's available
+		from TER and does not need any configuration. just install it and navigate to the module:
+	</p>
+
+	<p><a href="http://typo3.org/extensions/repository/view/sm_charsethelper/current/"
+		  title="Charset helper extension in TER on typo3.org" class="external-link">http://typo3.org/extensions/repository/view/sm_charsethelper/current/</a>
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-04-30 09:28">on April 30, 2009 at 09:28</time>
+			<p>
+				I forgot to mention some external ressource:<br/>
+				<br/>
+				<a href="http://dev.mysql.com/doc/refman/5.1/en/charset-connection.html"
+				   title="Chapter from the MySQL documentation: Connection Character Sets and Collations">http://dev.mysql.com/doc/refman/5.1/en/charset-connection.html</a><br/>
+				On this page you can learn how MySQL handles charsets, what stages exist and how they are configured.
+				This page is mandatory for every TYPO3 administrator.<br/>
+				<br/>
+				<a href="http://public.m-plify.net/mysql/MySQL_Charset_Handling.pdf"
+				   title="Hand-drawn diagram about MySQL components and its character set transformations">http://public.m-plify.net/mysql/MySQL_Charset_Handling.pdf</a><br/>
+				It is a hand-drawn diagram which gives you an impression how data is stored, shipped and transformed and
+				what components are involved.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Rudolf</span>
+			<time class="comment-time" datetime="2009-12-26 07:09">on December 26, 2009 at 07:09</time>
+			<p>
+				Hello Steffen, it would be nice to add a trailing ";" to the command "SHOW VARIABLES LIKE
+				'%CHARACTER_SET%';". If you are not so fluent with mysql, you are searching a while to figure out.<br/>
+				Regards, Rudolf
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-01-09 02:05">on January 09, 2010 at 02:05</time>
+			<p>
+				Just found another source of information about setting up a TYPO3 environment with UTF-8: <a
+					title="Website of Xavier Perseguers (TYPO3 core member)"
+					href="http://xavier.perseguers.ch/en/tutorials/typo3/configuration/utf-8.html">http://xavier.perseguers.ch/en/tutorials/typo3/configuration/utf-8.html</a>
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-02-24 17:06">on February 24, 2011 at 17:06</time>
+			<p>
+				I have just uploaded a new version of the sm_charsethelper extension to TER. It now uses the Reports
+				module instead of an own BE module.
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author"><a href="http://www.tritum.de" rel="external">Björn</a></span>
+			<time class="comment-time" datetime="2011-04-27 16:31">on April 27, 2011 at 16:31</time>
+			<p>
+				Hi there,<br/>
+				<br/>
+				you're extension is awesome. Just found it through google. <br/>
+				<br/>
+				I've got a strange problem with a brand new TYPO3 4.5 installation. I've set up Russian and TYPO3
+				behaves strange. Russian content in the bodytext field is shown correctly. Content in the headline is
+				stored and displayed as entities. Your report says everything is UTF8 but why do I get entities? Have
+				you ever had such a problem?<br/>
+				<br/>
+				Thanks, Björn
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-04-27 17:33">on April 27, 2011 at 17:33</time>
+			<p>
+				Hi Björn,<br/>
+				I guess you mean HTML entities (like &amp;amp;). This has nothing to do with character set. <br/>
+				Please ask for support in the TYPO3 mailinglists. There are quite a lot geeks in there with great
+				knowledge.
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-05-12 22:19">on May 12, 2011 at 22:19</time>
+			<p>
+				Here's some more info about utf-8. I hope this helps you:<br/>
+				<br/>
+				When your Apache serves text files (e.g. *.txt, *.html) which are utf-8 encoded, you need this setting
+				in Apache:<br/>
+			<pre><code>AddDefaultCharset UTF-8</code></pre>
+			<br/>
+			@see: <a href="http://httpd.apache.org/docs/2.2/en/mod/core.html#adddefaultcharset"
+					 title="Apache AddDefaultCharset Directive">http://httpd.apache.org/docs/2.2/en/mod/core.html#adddefaultcharset</a><br/>
+			<br/>
+			This will add the following HTTP header to the server response:<br/>
+			<br/>
+			<pre><code>Content-Type: text/html; charset=UTF-8</code></pre>
+			<br/>
+			If you don't have this header, non-ascii characters in your file will probably not be shown correctly. For
+			example, the "ä" character will be shown in browser as "Ã¤"<br/>
+			<br/>
+			When you have plain PHP scripts, there's an alternative to Apaches AddDefaultCharset. PHP has its own
+			configuration option to be set in php.ini:<br/>
+			<br/>
+			<pre><code>default_charset = "utf8"</code></pre>
+			<br/>
+			@see: <a href="http://www.php.net/manual/en/ini.core.php#ini.default-charset"
+					 title="Official PHP documentation about default_charset ">http://www.php.net/manual/en/ini.core.php#ini.default-charset</a><br/>
+			<br/>
+			Alternatively, set this in PHP code via:<br/>
+			<br/>
+			<pre><code>ini_set('default_charset', 'utf8');</code></pre>
+			<br/>
+			This results in the same HTTP header as mentioned above. Please note that this will only apply to PHP files,
+			not plain text or html files.<br/>
+			<br/>
+			To debug your HTTP headers, I recommend to use <a
+				href="https://addons.mozilla.org/de/firefox/addon/live-http-headers/"
+				title="Firefox Add-on Live HTTP headers">Firefox add-on "Live HTTP headers"</a>.<br/>
+
+			<p>&nbsp;</p>
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-05-12 22:42">on May 12, 2011 at 22:42</time>
+			<p>
+				Did you know that some PHP string functions are not utf-8 capable?<br/>
+				<br/>
+				Try this:<br/>
+<pre><code>&lt;?php
+  echo strlen('ö');
+?&gt;</code></pre>
+			<br/>
+			Expected result: 1<br/>
+			Actual result: 2<br/>
+			<br/>
+			So better use this:<br/>
+			<br/>
+<pre><code>&lt;?php
+  echo mb_strlen('ö', 'utf-8');
+?&gt;</code></pre>
+			<br/>
+			Expected result: 1<br/>
+			Actual result: 1
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">Holgy</span>
+			<time class="comment-time" datetime="2012-01-04 19:41">on January 04, 2012 at 19:41</time>
+			<p>
+				<br/>
+				The TYPO3 wiki has got a dedicated UTF-8 page: <a href="http://wiki.typo3.org/UTF-8_support">http://wiki.typo3.org/UTF-8_support</a><br/>
+				<br/>
+				There you can also find a script to convert existing database to utf-8
+			</p>
+		</li>
+
+	</ol>
+</section>

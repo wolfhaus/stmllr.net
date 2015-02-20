@@ -1,0 +1,223 @@
+---
+layout: post
+title: Writing a basic Fluid ViewHelper for TYPO3
+date: 2009-05-16 01:27
+excerpt: After listening to Sebastians talk at T3DD09 today about the new templating engine Fluid, I felt inspired to give it a try. I am really surprised how easy it is to extend Fluid by writing an own ViewHelper. Read on to learn how to get started.
+tags: 
+  - TYPO3
+  - FLOW3
+  - Fluid
+  - ViewHelper
+---
+
+<section>
+	<p>My goal was to add a <a href="http://forge.typo3.org/projects/show/package-fluid"
+									title="Fluid project page on forge" class="external-link">Fluid</a> ViewHelper to
+	the blog_example extension. This extension is backported from FLOW3 to TYPO3 v.4 as a demonstration for extBase.
+	Read more about blog_example, extBase and Fluid in v.4 in the <a
+			href="http://forge.typo3.org/projects/show/typo3v4-mvc" title="Project page of the MVC framework in forge"
+			class="external-link">MVC framework project page</a>. I will not explain details here but concentrate on the
+	view helper stuff. My view helper should add a new template marker which creates a dummy text &quot;Lorem Ipsum&quot;.
+	The marker expects an integer value, which is used for cropping the dummy text.
+</p>
+
+	<p>After installing and setting up extBase, Fluid and the blog_example extensions, I added a new view helper folder
+		in the blog_example extension:
+	</p>
+	<pre>mkdir typo3conf/ext/blog_example/Classes/ViewHelpers</pre>
+	<p>This folder is generally used as a container for view helpers which are shipped with extensions. In the next
+		step, I created a new which contains the helper itself:
+	</p>
+	<pre>touch typo3conf/ext/blog_example/Classes/ViewHelpers/LoremIpsumViewHelper.php</pre>
+	<p>It's important to stick to this naming scheme, because otherwise Fluid will not find the view helper. Let's have
+		a closer look at it. Beside the .php extension at the end of the filename, it contains two main parts: <i>LoremIpsum</i>
+		and <i>ViewHelper</i>. <i>LoremIpsum</i> is the very name of the view helper and <i>ViewHelper</i> is a constant
+		which is a mandatory part. The filename reflects the naming scheme of the class name of the view helper. So
+		let's see what the file content looks like. I removed some comments to increase readability:
+	</p>
+	<pre>&lt;?php<br/><br/>/**<br/>&nbsp;* This class is a demo view helper for the Fluid templating engine.<br/>&nbsp;*<br/>&nbsp;* @package TYPO3<br/>&nbsp;* @subpackage Fluid<br/>&nbsp;* @version<br/>&nbsp;*/<br/>class Tx_BlogExample_ViewHelpers_LoremIpsumViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {<br/><br/>&nbsp;&nbsp;&nbsp; /**<br/>&nbsp;&nbsp;&nbsp; &nbsp;* Renders some classic dummy content: Lorem Ipsum...<br/>&nbsp;&nbsp;&nbsp; &nbsp;*<br/>&nbsp;&nbsp;&nbsp; &nbsp;* @param int $length The number of characters of the dummy content<br/>&nbsp;&nbsp;&nbsp; &nbsp;* @validate $length IntegerValidator<br/>&nbsp;&nbsp;&nbsp; &nbsp;* @return string dummy content, cropped after the given number of characters<br/>&nbsp;&nbsp;&nbsp; &nbsp;* @author Lorem Ipsum &lt;lorem@example.com&gt;<br/>&nbsp;&nbsp;&nbsp; &nbsp;*/<br/>&nbsp;&nbsp;&nbsp; public function render($length) {<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; $dummyContent = 'Lorem ipsum dolor sit amet.';<br/>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return substr($dummyContent, 0, $length);<br/>&nbsp;&nbsp;&nbsp; }<br/>}<br/><br/>?&gt;</pre>
+	<p>This is a very basic example. My class extends the abstract view helper class of Fluid. I will not explain the
+		Fluid API here. Let's concentrate on the example. The only method of my class is <i>render()</i> which is used
+		to render the content of my marker. It crops a &quot;Lorem Ipsum&quot; string to a given length by using the
+		substr() function. Some PHPDoc parts in the comments of the render() method are mandatory to get the view helper
+		working. For example the @param part defines the argument and its type (int). Other PHPDoc parts are optional,
+		like @validate. This argument&nbsp;ensures that the render() method only gets integer values. The validation
+		itself is performed by the Extbase framework, so you don't have to care. If you'd like to learn more about
+		validators, have a look at the PHP files in extbase/Classes/Validation/Validator/. That's all for this part of
+		fluid.
+	</p>
+
+	<p>In a next step, I've added the view helper to the Fluid template of blog_example:
+	</p>
+	<pre># vi typo3conf/ext/blog_example/Resources/Private/Templates/Blog/index.html</pre>
+	<p>First I had to declare a namespace for my view helpers. I do this at the top of the template file. I chose to use
+		<i>blog</i>, to be used as a shortcut to all the view helpers of the blog_example extension. Next is the marker
+		itself. I put the marker below the existing &lt;f:layout&gt; and &lt;f:section&gt; tags. The syntax of my new
+		marker is easy to spot: The namespace and the viewhelper name is seperated by a : The length arguments is given
+		afterwards:
+	</p>
+	<pre><code></code><b>{namespace blog=Tx_BlogExample_ViewHelpers} </b>
+
+&lt;f:layout name=&quot;default&quot; /&gt;<br/>&lt;f:section name=&quot;content&quot;&gt;<b>
+
+&lt;h1&gt;<br/>&nbsp; &lt;blog:loremIpsum length=&quot;5&quot; /&gt;<br/>&lt;/h1&gt;
+
+</b>&lt;/f:section&gt;</code></pre>
+	<p>The result of using this template marker is a level 1 header with &quot;Lorem&quot; as the text:
+	</p>
+	<pre>&lt;h1&gt;Lorem&lt;/h1&gt;</pre>
+	<p>That's all. I am really exited about how easy it is to write own view helpers. I hope this article could
+		demonstrate that and motivate you to get into the FLOW3/Fluid/extBase universe.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-05-29 00:11">on May 29, 2009 at 00:11</time>
+			<p>
+					<span style="text-decoration: line-through;">Please note that the code examples are all based on a unstable API, which is still under heavy developement.<br/>
+The blog post only wants to give an impression, how thing basically work. Chances are 99,9% that the code examples do not work with other versions of Fluid and Extbase than the one of May,16th 2009.<br/>
+Please be patient until the release of TYPO3 4.3, which will ship not only a stable API but also an up-to-date quickstarter tutorial.</span>
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author"><a href="http://ipts.es" rel="external">Elías</a></span>
+			<time class="comment-time" datetime="2009-11-17 12:09">on November 17, 2009 at 12:09</time>
+			<p>
+				Very didactical example.<br/>
+				Now, I understand ViewHelpers.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2009-12-24 01:14">on December 24, 2009 at 01:14</time>
+			<p>
+				I have just updated the code examples to fit the 4.3 stable API. Have fun trying it out!
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">rvt</span>
+			<time class="comment-time" datetime="2010-04-24 00:01">on April 24, 2010 at 00:01</time>
+			<p>
+				Why are viewhelpers not created in fileadmin?
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-04-24 00:11">on April 24, 2010 at 00:11</time>
+			<p>
+				Well, TYPO3 expects viewhelpers to be found in a special directory (ext_name/Classes/ViewHelpers/). This
+				way it can automatically scan the directory for viewhelpers and use them. No explicit registration
+				needed, no hassle with including classes.
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">superjens</span>
+			<time class="comment-time" datetime="2010-09-10 09:35">on September 10, 2010 at 09:35</time>
+			<p>
+				Very fine, thank you for let me understanding the ViewHelpers!
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">milan</span>
+			<time class="comment-time" datetime="2011-05-12 11:26">on May 12, 2011 at 11:26</time>
+			<p>
+				Wonderful, thank you
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Till</span>
+			<time class="comment-time" datetime="2011-07-14 15:20">on July 14, 2011 at 15:20</time>
+			<p>
+				Thanks for this good article. Though, just as a hint in case you haven't noticed, $lenght != $length.
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-07-14 16:14">on July 14, 2011 at 16:14</time>
+			<p>
+				haha, thanks for spotting this one, Till. This is one of my favorite typos. At least I used lenght
+				consequently :)<br/>
+				I have corrected the code examples and changed lenght to length.
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author"><a href="http://www.asdnetworks.com" rel="external">Roxanne</a></span>
+			<time class="comment-time" datetime="2012-12-02 02:22">on December 02, 2012 at 02:22</time>
+			<p>
+				&lt;f:section name="content"&gt;<br/>
+				<br/>
+				should it not be <br/>
+				<br/>
+				&lt;f:section name="content"/&gt;
+			</p>
+		</li>
+
+		<li id="comment-11">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-12-03 11:28">on December 03, 2012 at 11:28</time>
+			<p>
+				Thx Roxanne for your hint. Almost correct. The closing tag was missing. I fixed it in the article
+			</p>
+		</li>
+
+		<li id="comment-12">
+			<span class="comment-author"><a href="http://ainf.uniud.it" rel="external">Gilas</a></span>
+			<time class="comment-time" datetime="2012-12-19 13:10">on December 19, 2012 at 13:10</time>
+			<p>
+				Hi thank you for this article.<br/>
+				It is not easy to understand fluid because there is several folders, piece of code, etc.<br/>
+				I tried it and it works correctly,<br/>
+				however when I edited <br/>
+				<br/>
+				# vi typo3conf/ext/blog_example/Resources/Private/Templates/Blog/index.html<br/>
+				<br/>
+				adding your code at the end of the template I got some erros for duplicating variables.<br/>
+				<br/>
+				So I replaced all the content with your code and all works fine.<br/>
+				<br/>
+				Now I need to do a new step: restore the previous Index.html (this is not a problem) instead I put your
+				code in a new file:<br/>
+				<br/>
+				blog_example/Resources/Private/Templates/Blog/LoremIpsum.html<br/>
+				<br/>
+				now I want to do a new action to run this template.<br/>
+				<br/>
+				Hope you can write something and this could be userful to 'extend' this nice article.<br/>
+				<br/>
+				thank you
+			</p>
+		</li>
+
+		<li id="comment-13">
+			<span class="comment-author"><a href="http://ainf.uniud.it" rel="external">Gilas</a></span>
+			<time class="comment-time" datetime="2012-12-19 13:17">on December 19, 2012 at 13:17</time>
+			<p>
+				to be more precise this is the error -- it is displayed and no matter if your code is before/after the
+				existing template named 'default':<br/>
+				<br/>
+				Duplicate variable declarations!<br/>
+				<br/>
+				More information regarding this error might be available online.<br/>
+				<br/>
+				another tip: please add that each time you modify a file you should clear the configuration cache,
+				otherwise the modifications are not applied.
+			</p>
+		</li>
+
+	</ol>
+</section>

@@ -1,0 +1,48 @@
+---
+layout: post
+title: TYPO3 breaks on Ubuntu 8.04 LTS Hardy Heron (and how to fix it)
+date: 2008-05-09 19:24
+excerpt: After a dist-upgrade from Gutsy to Hardy on our webserver, TYPO3 was suddenly broken. The reason is a bug in PHP 5.2.4. There is a workaround for TYPO3, but unfortunately the patch is still pending in the core list.
+tags: 
+  - TYPO3
+  - PHP
+  - Bugs
+---
+
+<section>
+	<p>Oliver Harder already <a
+			href="http://support.typo3.org/index.php?id=12&amp;tx_nntpreader_pi1%5Bnid%5D=61&amp;tx_nntpreader_pi1%5Bmid%5D=329677&amp;cHash=627a3dbd81"
+			title="core-list discussion and patch" class="external-link">requested to commit a patch</a> and it works.
+	</p>
+
+	<p>So if you run into trouble with Ubuntu 8.04, download the patch to your typo3_src directory and <a
+			href="http://typo3.org/development/bug-fixing/diff-and-patch/" title="How to patch TYPO3 sources"
+			class="external-link-new-window">patch</a> your sources:
+	</p>
+	<pre>patch&nbsp; -p0 &lt; 0006158_v2.patch</pre>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2008-05-11 12:04">on May 11, 2008 at 12:04</time>
+			<p>
+				The bug seems to affect only fcgi environments.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">marcus</span>
+			<time class="comment-time" datetime="2008-05-12 08:36">on May 12, 2008 at 08:36</time>
+			<p>
+				Thanks!! this patch worked great for me. Great job.<br/>
+				<br/>
+				btw. my env fcgi based with nginx.<br/>
+
+			</p>
+		</li>
+	</ol>
+</section>

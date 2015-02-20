@@ -1,0 +1,135 @@
+---
+layout: post
+title: Little case study on using static file cache to increase performance of TYPO3
+date: 2009-12-07 17:51
+excerpt: The average number of requests on www.t3node.com is growing more and more. Since the website is hosted on a tiny virtual machine shared with others, the overall server performance is bad. Today I decided to serve pages from file cache to reduce the load. This little case study describes the problem by example and gives some key data for illustration.
+tags: 
+  - Performance
+  - TYPO3
+  - Caching
+  - USER_INT
+  - Extensions
+---
+
+<section>
+	<h3>Introduction</h3>
+
+	<p>There are several other websites hosted on the server and TYPO3 is not the only one eating performance. At peak
+		periods, the server load&nbsp;is very high and pages are served with much delay. Not only visitors suffer from
+		slow websites, but there are rumors that&nbsp;google may take performance into ranking account (so called speed
+		rank).
+	</p>
+
+	<h3>Solution</h3>
+
+	<p>Since this website is driven by TYPO3, I decided to install the <a
+			href="http://typo3.org/extensions/repository/view/nc_staticfilecache/current/"
+			title="static file cache extension in TER on typo3.org" class="external-link">static file cache extension
+		(nc_static_file_cache)</a>.This extension puts pages from the page cache to files in the filesystem. Whenever a
+		page is requested, it gets served from the file system without involving TYPO3.
+	</p>
+
+	<h3>Test results (1)</h3>
+
+	<p>To test the performance gain, I used ApacheBench (ab) on the start page:
+	</p>
+	<pre>spock@enterprise:/tmp$ ab -c 10 -n 1000 http ://www.t3node.com/</pre>
+	<p>The result was disappointing <b>8 req/s.</b>
+	</p>
+
+	<p>After some investigation I realized that most of my pages did not profit from this cache. The info module of the
+		static file cache extension reported, that they could not be statically served because they contain&nbsp;uncached
+		USER_INT objects. Inspections with the admpanel revealed two extensions which use USER_INT:</p>
+	<ul>
+		<li><a href="http://typo3.org/extensions/repository/view/nc_ttnews_mostpopular/current/"
+			   title="News: most popular extension in TER on typo3.org" class="external-link">'News:&nbsp;most popular'
+			extension (nc_ttnews_mostpopular)</a>, which was used to count and display hits of the blog articles.
+		</li>
+		<li><a href="http://typo3.org/extensions/repository/view/tp_twitter/current/"
+			   title="Twitter RSS feed extension in TER on typo3.org" class="external-link">Twitter RSS feed extension
+			(tp_twitter)</a>, which was used to show my latest three tweets.
+		</li>
+	</ul>
+	<h3>Fixing the issues</h3>
+
+	<p>I decided to remove the 'most popular' extension, since I never really liked the approach to save statistic data
+		in the database table of the entity. I am going to look for something similar, maybe using some JavaScript
+		counter or Apache access_log in combination with <a
+				href="http://typo3.org/extensions/repository/view/coago/current/"
+				title="COA_GO extension in TER on typo3.org" class="external-link">COA_GO</a>.
+	</p>
+
+	<p>The Tweet is still shown, but as a cached USER object which will be updated once a day. I think that's a good
+		compromise, since my twitter activity is anyway not so high.
+	</p>
+
+	<h3>Test results (2)</h3>
+
+	<p>To test the performance gain, I used ApacheBench (ab) on the start page:
+	</p>
+	<pre>spock@enterprise:/tmp$ ab -c 10 -n 1000 http ://www.t3node.com/</pre>
+	<p>With USER_INT cObjects: <b>8 req/s.</b>
+	</p>
+
+	<p>Without USER_INT cObjects and without static file cache: <b>40 req/s.</b>
+	</p>
+
+	<p>Without USER_INT cObjects and with static file cache: <b>500 req/s.</b>
+	</p>
+
+	<p>That's <b>62.5 times faster</b> than before! Ready to get slashdottet :-)
+	</p>
+
+	<h3>Conclusion</h3>
+
+	<p>Performance can be crucial. If your website feels slow, search for bottlenecks like USER_INT extensions. If you
+		can manage to get rid of USER_INT cObjects, chances are that you can also profit by a static file cache. That
+		could push your website performance to lightning speed.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">terrorfrog</span>
+			<time class="comment-time" datetime="2012-06-04 05:28">on June 04, 2012 at 05:28</time>
+			<p>
+				Ahm you may or may not already optimizie and proper configure the hole apache subset<br/>
+				<br/>
+				not only php optimizer and proper mem config (never use to much btw) <br/>
+				<br/>
+				also think about to switch to ngix <br/>
+				<br/>
+				another server threatment you shoudl consider are ssds<br/>
+				<br/>
+				they are not suitable for big datastorage but for the typo3 core it is (symlinking to different
+				partitions)<br/>
+				<br/>
+				the big advantage is you get high speed drives for about 150€ - even used as a mirror softwareraid they
+				are faster than a high end raid 10 combination <br/>
+				<br/>
+				simply one drive can read at 450mb/sec and seek times below 1ms while even a multiarray MAYBE be ablle
+				to deliver that datarate it can never deliver that seek time <br/>
+				<br/>
+				<br/>
+				typo3 - is a bitch - because of its contruction - accessing so many files for every simple function -
+				here you profit from php optimizer with cache in memory / ramdisks and ssds<br/>
+				<br/>
+				<br/>
+				- <br/>
+				if you have to much server memory but no ssds - simple solution - mount in fsck a ramdrive - make a
+				startupscript copying the directory of typo3 core into it<br/>
+				<br/>
+				links your installations to that new drive<br/>
+				<br/>
+				voilla - high speed typo3 core :)<br/>
+				<br/>
+				i personally prefer ssds for some reasons - specially after reboot take a while to copy the content
+			</p>
+		</li>
+
+	</ol>
+</section>

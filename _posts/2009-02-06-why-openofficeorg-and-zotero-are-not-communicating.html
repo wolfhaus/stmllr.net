@@ -1,0 +1,69 @@
+---
+layout: post
+title: Why OpenOffice.org and Zotero are not communicating
+date: 2009-02-06 00:10
+excerpt: For my thesis I use OpenOffice.org in combination with Zotero (Firefox) to manage my references. (I already posted an article about Zotero over a year ago.) Both are powerful tools, but sometimes they are troublemakers...
+tags: 
+  - Zotero
+  - Bibliography
+  - Firefox
+  - OpenOffice.org
+  - Reference management
+  - Logging
+---
+
+
+<section>
+	<p><a href="http://www.zotero.org/" title="Zotero Homepage" class="external-link">Zotero</a> provides its
+	services via HTTP, using TCP port 50001 on localhost. <a href="http://www.openoffice.org/"
+															 title="OpenOffice.org Homepage" class="external-link">OpenOffice.org</a>
+	on the other side uses an Extension to build a bridge to Zotero by connecting to that service. To be able to access
+	my bibliography from OpenOffice.org, Firefox/Zotero has to be running all the time.
+	</p>
+
+	<p>To get a quick impression about what services are listening on what socket (IP/port), I use netstat:
+	</p>
+	<pre>spock@cayenne:~$ netstat -ltpn<br/><br/>Proto Recv-Q Send-Q Local Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Foreign Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PID/Program name<br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:3690&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:50001&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 11201/firefox&nbsp;&nbsp; <br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:631&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;</pre>
+	<p>Whenever I am at home, OpenOffice.org and Zotero are running as expected. As soon as I leave home (e.g. to spend
+		a day in the library) OpenOffice.org refuses to connect to Zotero, complaining that Zotero might not be running:
+	</p>
+
+	<p><img alt="OpenOffice.org / Zotero error message" src="/files/zotero/ErrorZoteroOpenoffice.png" width="502"
+			height="106"/></p>
+
+	<p>But Zotero was up and running?! I remembered I had this error before, when updating Zotero to a new version
+		without updating the OpenOffice.org extension. But this time there was no update.
+	</p>
+
+	<p>After some investigation, I found out that one can turn on the logging of Zotero using <a
+			href="http://www.mozillazine.org/misc/about:config/"
+			title="Read more on about:config in MozillaZine knowledge base" class="external-link">about:config</a> in
+		Firefox (extensions.zotero.debug.log = true). The logs revealed that Zotero wasn't able to to offer it's HTTP
+		service, because Firefox is in offline mode:
+	</p>
+	<pre>(...)<br/>Browser is offline -- not initializing integration HTTP server<br/>(...)</pre>
+	<p>netstat could also not find Firefox listening on port 50001:
+	</p>
+	<pre>spock@cayenne:~$ netstat -ltpn<br/><br/>Proto Recv-Q Send-Q Local Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Foreign Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PID/Program name<br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:3690&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:631&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - </pre>
+	<p>The laptop I use for writing is always online at home. In the library it is usually offline except for the
+		localhost dummy interface (127.0.0.1). Firefox on Ubuntu Intrepid seems to switch to offline mode, if no
+		outbound network connection can be found. In offline mode, Zotero does not provide its service at all, although
+		it does in no way depend on an outbound network.
+	</p>
+
+	<p>The solution was to switch to online mode in Firefox, which lets Zotero start its service immediately.
+	</p>
+
+	<p>What can we learn from the story?</p>
+	<ul>
+		<li>Do not blindly believe in error logs: They sometimes don't tell the whole truth. Instead of precisely
+			describing the problem, the OpenOffice.org popup made useless suggestions (&quot;Make sure Firefox is open&quot;).
+		</li>
+		<li>Do not blindly wipe away error logs: Chances are, that you find the reason for your problem inside. Zotero
+			loggin was hard to find, but then revealed the root of my problem.
+		</li>
+	</ul>
+</section>
+
+{% include post-taglist.html %}
+

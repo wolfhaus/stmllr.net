@@ -1,0 +1,105 @@
+---
+layout: post
+title: How to find hidden TYPO3 features?
+date: 2008-08-04 11:02
+excerpt: From time to time, TYPO3 core devs and insiders leak secret knowledge in the mailinglists. One can find questions about "how to do this?" with answers surprisingly revealing undocumented features. Read on for some hints about how to find those features without asking.
+tags: 
+  - TYPO3
+  - Documenation
+  - Undocumentation
+  - Hidden features
+---
+
+<section>
+	<h3>TYPO3 wiki: <a href="http://wiki.typo3.org/index.php/Pending_Documentation"
+							title="TYPO3 wiki page about features which needs to be added to the official docs"
+							class="external-link">pending documentation section</a>
+	</h3>
+
+	<p>The first place to look for those features is the <a href="http://wiki.typo3.org/index.php/Pending_Documentation"
+															title="TYPO3 wiki page about features which needs to be added to the official docs"
+															class="external-link">pending documentation section</a> in
+		the TYPO3 wiki. It's meant to be the place for documentation of all new features, which have been added to the
+		trunk, but not yet released. The items are collected here, reviewed and then put into the docs at typo3.org.
+		Sometimes, this process is a little bit delayed and the wiki page becomes the only referrer to new features of
+		an actual release. In this context, we can see <a
+				href="http://support.typo3.org/teams/core/m/re-typo3-core-rfc-9046-nested-domain-linking-with-domain-record-on-root-page-356324/"
+				title="Comment in RFC: #9046: Nested domain linking with domain record on root page"
+				class="external-link">Dmitry bashing Michael in the core list</a> about that: &quot;(...) Stucki is
+		responsible for [not] updating core documentation in time. kick him, I am already tired of doing it. (...)&quot;
+		(Dmitry, 2008/07/31).
+	</p>
+
+	<h3>Forge: <a href="http://forge.typo3.org/repositories/browse/typo3v4-core/Documentation/trunk"
+				  title="Latest core docs waiting for release" class="external-link">Core docs in the subversion
+		trunk</a></h3>
+
+	<p>Francois kindly <a
+			href="http://support.typo3.org/teams/core/m/typo3-core-fyi-updated-tsref-with-pending-documentation-360561/"
+			title="Discussion thread in the core list" class="external-link">updated TSref</a> with all pending parts
+		from the wiki. To be release soon...
+	</p>
+
+	<h3>Bugtracker: <a
+			href="http://bugs.typo3.org/search.php?project_id=21&amp;sticky_issues=on&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90"
+			title="List of bugs about TYPO3 documentation" class="external-link">documentation category</a></h3>
+
+	<p>Another place is the bugtracker. There is a <a
+			href="http://bugs.typo3.org/search.php?project_id=21&amp;sticky_issues=on&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90"
+			title="List of bugs about TYPO3 documentation" class="external-link">documentation section in mantis</a>,
+		where tough users could have reported items about missing documentation.
+	</p>
+
+	<h3>Mailinglists: <a href="http://support.typo3.org/other-views/search-newsgroups/"
+						 title="TYPO3 mailinglist archive at typo3.org" class="external-link">recently committed
+		features</a></h3>
+
+	<p>Last but not least, you could RTFML, especially the core list. Use the <a
+			href="http://support.typo3.org/other-views/search-newsgroups/"
+			title="TYPO3 mailinglist archive at http://support.typo3.org" class="external-link">search function of
+		support.typo3.org</a> for a full bodytext search. Although &quot;we cannot expect from our users to read the
+		Core list to learn about new features&quot; (<a
+				href="http://support.typo3.org/teams/core/m/re-typo3-core-rfc-9109-enable-feature-in-element-browser-in-rte-like-in-normal-one-356680/p/99/"
+				title="Masi commenting RFC: #9046" class="external-link">Masi, 2008/08/04</a>), it however seems to be
+		the price one has to pay for living on the bleeding edge.
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2008-09-04 22:09">on September 04, 2008 at 22:09</time>
+			<p>
+				Francois kindly updated core docs to 4.2. They are still not available on typo3.org, but can be found on
+				forge as .sxw document: <br/>
+				https://svn.typo3.org/TYPO3v4/Core/Documentation/trunk/<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2008-11-01 13:02">on November 01, 2008 at 13:02</time>
+			<p>
+				Get an idea about what new features have been committed to trunk by subscribing to core svn feed: <br/>
+				http://forge.typo3.org/projects/activity/typo3v4-core?format=atom
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-01-17 14:39">on January 17, 2011 at 14:39</time>
+			<p>
+				System extensions usually ship their own documentation as OpenOffice document. These docs are located in
+				the Extension directory in docs/manual.sxw<br/>
+				At the moment (2010/01) they are not rendered on typo3.org although they are part of the core. You can
+				get access to these docs via the extension manager.
+			</p>
+		</li>
+
+	</ol>
+</section>

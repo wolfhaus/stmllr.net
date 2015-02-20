@@ -1,0 +1,19 @@
+---
+layout: post
+title: OSBF-lua rules
+date: 2007-05-26 04:40
+excerpt: Last week, I moved my IMAP account from university to a privately hosted server. At the same time, I said goodbye to Spamassassin and switched to OSBF-lua - the results were impressive...
+tags: 
+  - OSBF-lua
+  - Spam
+  - Bayes
+---
+
+<section>
+	<p>
+		Already installed by <a href="http://underused.org/" title="Michael Scharkow" class="external-link" >Michael</a>, I just had to create some maildrop rules to feed <a href="http://osbf-lua.luaforge.net/" title="OSBF-lua project website at sourceforge" class="external-link" >OSBF-lua</a>. After training the bayes database with 42 pieces of spam and 9 of ham, almost any following spam was classified correctly as bulk. The training was easy. Besides some perl/shell scripts, the bayes filter can be trained by sending false pos/negs back to OSBF-lua. You simply have to change the 'Subject:' and 'To:' headers (remember majordomo?). The first thing that came to my mind was: Hey, this could easily be done with a one-click button in Thunderbird. Any extension out there?<br />  <br />
+	</p>
+	<pre>Statistics for nonspam.cfc:<br />-----------------------------------------------<br />Database version:                    OSBF-Bayes<br />Total buckets in database:                94321<br />Buckets used (%):                           9.0<br />Bucket size (bytes):                         12<br />Header size (bytes):                       4092<br />Number of chains:                          7444<br />Max chain len (buckets):                      5<br />Average chain length (buckets):             1.1<br />Max bucket displacement:                      3<br />Buckets unreachable:                          0<br />Trainings:                                    9<br />Classifications:                             88<br />Learned mistakes:                             7<br />Extra learnings:                              0<br />Ham accuracy (%):                         92.47<br />-----------------------------------------------<br /><br />Statistics for spam.cfc:<br />-----------------------------------------------<br />Database version:                    OSBF-Bayes<br />Total buckets in database:                94321<br />Buckets used (%):                          62.6<br />Bucket size (bytes):                         12<br />Header size (bytes):                       4092<br />Number of chains:                         16430<br />Max chain len (buckets):                     60<br />Average chain length (buckets):             3.6<br />Max bucket displacement:                     29<br />Buckets unreachable:                          0<br />Trainings:                                   42<br />Classifications:                            134<br />Learned mistakes:                             2<br />Extra learnings:                              1<br />Spam accuracy (%):                        98.45<br />-----------------------------------------------<br />Spam rate (%):                            58.11<br />Global accuracy (%):                      95.95<br />-----------------------------------------------</pre>
+</section>
+
+{% include post-taglist.html %}

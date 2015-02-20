@@ -1,0 +1,414 @@
+---
+layout: post
+title: Streaming audio with MPD and Icecast2 on Raspberry Pi
+date: 2012-07-23 23:36
+excerpt: The main purpose of my Raspberry Pi is to act as a central music box. This task can easily be solved with MPD and Icecast2. Read on and get it working within 15 minutes.
+tags: 
+  - RaspberryPi
+  - RasPi
+  - MPD
+  - Icecast
+  - Streaming Audio
+---
+<section><h3>Prerequisites</h3>
+
+	<p>I strongly suggest to use the <a href="http://www.raspbian.org/" title="Raspbian: Debian for Raspberry Pi"
+										class="external-link">Raspbian distributio</a>n as operating system. It has
+		built-in <a
+				href="http://raspberrypi.stackexchange.com/questions/545/does-the-raspberry-pi-have-hardware-floating-point-support"
+				title="Hardware floating point support in Raspberry Pi" class="external-link">hardfloat support for the
+			FPU</a> on your Raspberry Pi. This truly boosts performance for audio encodings. Without hardfloat support,
+		you'll probably end up with 100% CPU usage. The result would be playback hickups and no fun at all.
+	</p>
+
+	<p>Icecast2 is a free audio streaming server which supporting the shoutcast protocol. MPD is a music player daemon
+		which serves as a backend for playing audio. MPD uses the shoutcast library to stream to icecast2. Fortunately,
+		Raspbian MPD is compiled with libshout and also mp3 support by default so we don't have to build any custom
+		packages. MPC is a command line client to control MPD, for example to manage playlists or to start/stop playing
+		a song.
+	</p>
+
+	<h3>Package installation</h3>
+
+	<p>It's straighforward:
+	</p>
+	<pre>$ sudo aptitude install mpc mpd icecast2<br/>The following NEW packages will be installed:<br/>&nbsp; icecast2 libao-common libao4 libaudiofile1 libavahi-glib1 libavcodec53 libavformat53<br/>&nbsp; libavutil51 libcurl3-gnutls libdirac-encoder0 libfaad2 libgsm1 libjack-jackd2-0<br/>&nbsp; libmms0 libmp3lame0 libmpcdec6 libmpdclient2 libschroedinger-1.0-0 libshout3<br/>&nbsp; libspeex1 libtheora0 libva1 libvpx1 libwavpack1 libx264-123 libxvidcore4 mpc mpd</pre>
+	<p>The package manager will ask you to configure Icecast2. You should do so and set a hostname and passwords for
+		source, relay and administration. Needless to say to use strong passwords. The source password will be needed in
+		the MPD configuration. (I used ICECAST_SOURCE_PASSWORD in the example)
+	</p>
+
+	<p>The autoconfiguration of the MPD package could report some warnings about ipv6 and tag_cache:
+	</p>
+	<pre>Setting up mpd (0.16.7-2) ...<br/>[....] Starting Music Player Daemon: mpd<br/>listen: bind to '[::1]:6600' failed: Failed to create socket: Address family not supported<br/>by protocol (continuing anyway, because binding to '127.0.0.1:6600' succeeded)<br/>Failed to load database: Failed to open database file &quot;/var/lib/mpd/tag_cache&quot;:<br/>No such file or directory</pre>
+	<p>The tag_cache issue doesn't harm. The file will be added anyway and the warning will not appear again. This will
+		hopefully be fixed by the package maintainer. The other issue relates to missing ipv6 network support. You
+		probably need to load the ipv6 kernel module to get rid of this warning:
+	</p>
+	<pre>$ sudo modprobe ipv6</pre>
+	<h3>Configuring MPD</h3>
+
+	<p>A configuration set for the shout output needs to be added to /etc/mpd.conf
+	</p>
+	<pre>audio_output {<br/>&nbsp; type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;shout&quot;<br/>&nbsp; name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;RasPi MPD Stream&quot;<br/>&nbsp; description&nbsp;&nbsp;&nbsp;&nbsp; &quot;MPD stream on Raspberry Pi&quot;<br/>&nbsp; host&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;localhost&quot;<br/>&nbsp; port&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;8000&quot;<br/>&nbsp; mount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;/mpd&quot;<br/>&nbsp; password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;ICECAST_SOURCE_PASSWORD&quot;<br/>&nbsp; bitrate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;128&quot;<br/>&nbsp; format&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;44100:16:2&quot;<br/>&nbsp; encoding&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;mp3&quot;<br/>}</pre>
+	<p>This will stream to the icecast2 server on localhost:8000, using /mpd as mount point. The stream will be encoded
+		on the fly to 16bit, 2 channel stereo mp3 at 128k bitrate.
+	</p>
+
+	<p>If you ran into the ipv6 warning before, you could alternatively solve that by setting an ipv4-only address:
+	</p>
+	<pre>bind_to_address &quot;127.0.0.1&quot;</pre>
+	<p>Now restart MPD to reload the configuration:
+	</p>
+	<pre>$ sudo /etc/init.d/mpd restart</pre>
+	<h3>Check if things are up an running</h3>
+
+	<p>A new output should have been added and enabled:
+	</p>
+	<pre>$ mpc outputs <br/>Output 1 (My ALSA Device) is enabled<br/>Output 2 (RasPi MPD Stream) is enabled</pre>
+	<p>If the stream output is disabled, you can enable it using:
+	</p>
+	<pre>$ mpc enable 2</pre>
+	<p>Icecast2 should be running out of the box without any additional configuration.
+	</p>
+
+	<p>Check if both icecast2 and mpd are listening on tcp:
+	</p>
+	<pre>$ sudo netstat -ltpn<br/>Active Internet connections (only servers)<br/>Proto Recv-Q Send-Q Local Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Foreign Address&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PID/Program name<br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 0.0.0.0:8000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1299/icecast2<br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 127.0.0.1:6600&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1734/mpd<br/>tcp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 0.0.0.0:22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0.0.0:*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1531/sshd<br/>tcp6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 ::1:6600&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :::*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LISTEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1734/mpd</pre>
+	<h3>Start streaming</h3>
+
+	<p>First you need to add a minimal playlist with a song. If neccessary, fix permissions for the music and playlist
+		directories and check if your user (pi) is member of the audio group:
+	</p>
+	<pre>$ groups<br/>pi adm dialout cdrom sudo audio video plugdev games users input</pre>
+	<p>If audio does not appear in this list, add it:
+	</p>
+	<pre>$ sudo usermod -a pi -G audio</pre>
+	<p>Fix permissions:
+	</p>
+	<pre>$ sudo chmod g+w /var/lib/mpd/music/ /var/lib/mpd/playlists/<br/>$ sudo chgrp audio /var/lib/mpd/music/ /var/lib/mpd/playlists/</pre>
+	<p>Now download a demo song:
+	</p>
+	<pre>$ cd /var/lib/mpd/music/<br/>$ wget http://www.jonobacon.org/files/freesoftwaresong/jonobacon-freesoftwaresong2.ogg</pre>
+	<p>Add the song to the actual playlist:
+	</p>
+	<pre>$ mpc update<br/>$ mpc ls | mpc add<br/>$ mpc playlist<br/>Jono Bacon - Free Software Song </pre>
+	<p>Enable repeat mode in the test phase to prevent MPD from stoping:
+	</p>
+	<pre>$ mpc repeat on<br/>volume: 80%&nbsp;&nbsp; repeat: on&nbsp;&nbsp;&nbsp; random: off&nbsp;&nbsp; single: off&nbsp;&nbsp; consume: off</pre>
+	<p>Now start to play the song:
+	</p>
+	<pre>$ mpc play<br/>Jono Bacon - Free Software Song 2<br/>[playing] #1/1&nbsp;&nbsp; 0:00/3:18 (0%)<br/>volume: 80%&nbsp;&nbsp; repeat: on&nbsp;&nbsp;&nbsp; random: off&nbsp;&nbsp; single: off&nbsp;&nbsp; consume: off</pre>
+	<p>If your speakers are connected, you should hear the song playing. Credits for the <a
+			href="http://www.gnu.org/music/free-software-song.html" title="Free software sond" class="external-link">Free
+		Software Song go to Richard Stallmann and Jono Bacon</a> ;-)
+	</p>
+
+	<p>Then open your browser and point it to your raspberry host on port 8000: !http://your.raspberry.hostname:8000/
+		<br/>You should get the icecast status page with your stream at the mount point /mpd.
+	</p>
+
+	<p>If you navigate to http://your.raspberry.hostname:8000/mpd.m3u the browser should ask you to open the stream with
+		your favorite music player. Have a look at the codec of the stream and notice that it's mp3 at 128k, although
+		the original song is ogg at 160k. On-the-fly encoding is obviously working.
+	</p>
+
+	<p>Check your CPU usage using the top or htop command: it should be about 80%.
+	</p>
+
+	<h3>Which MPC clients to use?</h3>
+
+	<p>If you have an Android smartphone, I suggest to use <a
+			href="https://play.google.com/store/apps/details?id=com.namelessdev.mpdroid" title="MPD client for Android"
+			class="external-link">MPDroid</a>.
+	</p>
+
+	<p>On the desktop I use <a href="http://sonata.berlios.de/" title="Lightweight MPD client" class="external-link">Sonata</a>,
+		a lightweight GTK+ client written in Python.
+	</p>
+
+	<h3>Did this article help you? Spread the word!</h3>
+
+	<p>If you liked this article, please share it in your preferred social media circles (twitter, g+, facebook,
+		etc.)</p></section>
+<section>
+
+	<h3>Related articles</h3>
+	<ul>
+		<li><a href="/blog/2012-08-10-live-mp3-streaming-from-audio-in-with-darkice-and-icecast2-on-raspberry-pi.html">Live
+			mp3 streaming from audio-in with DarkIce and Icecast2 on Raspberry Pi</a> (
+			<time>August 10, 2012</time>
+			)
+		</li>
+	</ul>
+
+
+</section>
+
+{% include post-taglist.html %}
+
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Dave LaDelfa</span>
+			<time class="comment-time" datetime="2012-08-17 02:20">on August 17, 2012 at 02:20</time>
+			<p>
+				After the wget, I needed to do this, otherwise mpc ls wasn't seeing the file:<br/>
+				<br/>
+				mpc update<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-08-19 17:50">on August 19, 2012 at 17:50</time>
+			<p>
+				Thx Dave, I added it to the text.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-09-19 16:04">on September 19, 2012 at 16:04</time>
+			<p>
+				If you have a whole bunch of songs to be added to the actual playlist, better use:<br/>
+				<br/>
+				$ mpc add /<br/>
+				<br/>
+				instead of <br/>
+				<br/>
+				$ mpc ls | mpc add<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">ALI AKIN</span>
+			<time class="comment-time" datetime="2012-09-25 08:45">on September 25, 2012 at 08:45</time>
+			<p>
+				Dear MR. Steffen MULLER..<br/>
+				<br/>
+				I'bout a Raspberry PI board for make a Live Audio Streamer<br/>
+				I red your wroute at above..<br/>
+				But I am junior beginner to Raspbian and RaspberryPI.<br/>
+				I tried to install Darkness and Icecast to Raspberry,but it's<br/>
+				not succesfully.<br/>
+				Couyld you advice me that how can I ?nstall and configure of my Raspberry PI board for create a Audio IP
+				Streamer,<br/>
+				<br/>
+				Thank you for your kindly help<br/>
+				<br/>
+				Best Regards
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">Jeremy</span>
+			<time class="comment-time" datetime="2012-09-27 03:25">on September 27, 2012 at 03:25</time>
+			<p>
+				I actually had to add the following to my icecast.xml file to get it to work:<br/>
+				<br/>
+				<br/>
+				/mpd<br/>
+				<br/>
+				<br/>
+				Did anyone else have to do this?
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Jeremy</span>
+			<time class="comment-time" datetime="2012-09-27 03:27">on September 27, 2012 at 03:27</time>
+			<p>
+				Crap! The form removed the code:<br/>
+				<br/>
+				&lt;mount&gt;<br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&lt;mount-name >/mpd< /mount-name&gt;<br/>
+				&lt;/mount&gt;<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Jeremy</span>
+			<time class="comment-time" datetime="2012-09-27 03:28">on September 27, 2012 at 03:28</time>
+			<p>
+				Remove the spaces of course. I had to put those since the form removed it otherwise.
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-10-01 13:33">on October 01, 2012 at 13:33</time>
+			<p>
+				Sorry Jeremy for the hassle. The comments module is indeed crap.
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">mmmatjaz</span>
+			<time class="comment-time" datetime="2012-10-15 00:33">on October 15, 2012 at 00:33</time>
+			<p>
+				I'm using the built in httpd stream instead of icecast and the stream isn't exactly continuous, it keeps
+				stopping and skipping. I think the reason is that mpd has to transcode the sound in realtime, which is
+				probably to much to handle for the PI's cpu. Is there any other option that would allow to stream the
+				sound in it's original format? I've got plenty of bandwidth, so that won't be a problem. I just won't to
+				take that load off the CPU.
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author">mmmatjaz</span>
+			<time class="comment-time" datetime="2012-10-15 00:37">on October 15, 2012 at 00:37</time>
+			<p>
+				FIX:<br/>
+				* I want to take that load off the CPU.<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-11">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-10-15 09:27">on October 15, 2012 at 09:27</time>
+			<p>
+				I never used the builtin http streaming of mpd. AFAIK it also requires encoding, so you won't gain much
+				performance here. I suggest to use raspbian, which ships hardfloat FPU support. This will reduce the
+				load on your CPU significantly.<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-12">
+			<span class="comment-author">ronald</span>
+			<time class="comment-time" datetime="2012-10-19 19:24">on October 19, 2012 at 19:24</time>
+			<p>
+				Dr Muller<br/>
+				New to Raspbian!<br/>
+				Found the tutorial<br/>
+				Error on install - fetch fails because they have changed the file name recently:<br/>
+				<br/>
+				E: Failed to fetch
+				http://mirrordirector.raspbian.org/raspbian/pool/main/j/jackd2/libjack-jackd2-0_1.9.8~dfsg.4+20120529git007cdc37-4_armhf.deb:
+				404 Not Found<br/>
+				<br/>
+				Please, any suggestions?<br/>
+				thanks
+			</p>
+		</li>
+
+		<li id="comment-13">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-10-19 20:09">on October 19, 2012 at 20:09</time>
+			<p>
+				Dear ronald,<br/>
+				<br/>
+				try:<br/>
+				<br/>
+				$ aptitude update<br/>
+				$ aptitude safe-upgrade<br/>
+				<br/>
+				Then continue with installation. It's safe to do that before installing new packages.
+			</p>
+		</li>
+
+		<li id="comment-14">
+			<span class="comment-author"><a href="http://" rel="external">om</a></span>
+			<time class="comment-time" datetime="2012-10-21 10:15">on October 21, 2012 at 10:15</time>
+			<p>
+				Thanks very useful information
+			</p>
+		</li>
+
+		<li id="comment-15">
+			<span class="comment-author">om</span>
+			<time class="comment-time" datetime="2012-10-21 10:16">on October 21, 2012 at 10:16</time>
+			<p>
+				why'd it link my name to a site? lol
+			</p>
+		</li>
+
+		<li id="comment-16">
+			<span class="comment-author">Gethin Evans</span>
+			<time class="comment-time" datetime="2012-11-29 07:28">on November 29, 2012 at 07:28</time>
+			<p>
+				Excellent stuff! Great tutorial. Appreciated.<br/>
+				<br/>
+				This actually stopped my DAC from crunching, one of the libraries must have fixed it. Before I installed
+				these libraries, my Wolfson DAC would sound horrible. Maybe now it bypasses alsa? Not sure, but now it
+				sounds clean, even with 24bit 96khz flac files. mpc and vlc now plays back perfectly on my first gen pi.
+			</p>
+		</li>
+
+		<li id="comment-17">
+			<span class="comment-author">Mitesh</span>
+			<time class="comment-time" datetime="2013-02-13 19:55">on February 13, 2013 at 19:55</time>
+			<p>
+				i m getting error...<br/>
+				<br/>
+				after typing: sudo /etc/init.d/mpd restart<br/>
+				<br/>
+				Starting Music Player Daemon: mpdFailed to load database: Failed to open database file
+				"/var/lib/mpd/tag_cache": No such file or directory<br/>
+				Failed to create sticker table: database or disk is full<br/>
+				failed!<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-18">
+			<span class="comment-author">Nikola</span>
+			<time class="comment-time" datetime="2013-02-16 10:08">on February 16, 2013 at 10:08</time>
+			<p>
+				Hey, thanks for the tutorial. I was wandering if it is possible to make it work other way around. I have
+				a music library in my Android and a Raspberry Pi (with speakers) in my bedroom. I want to play the music
+				from my Android on the Raspberry speakers.<br/>
+				Thank you in advance.
+			</p>
+		</li>
+
+		<li id="comment-19">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2013-02-16 18:00">on February 16, 2013 at 18:00</time>
+			<p>
+				Hi Nikola.<br/>
+				<br/>
+				Sticking to my setup, you would need an app for android which is capable of sending audio streams (e.g.
+				http streams). On RasPi you could run icecast which receives the stream from android. A simple command
+				line player (like mplayer) on RasPi could then connect to the icecast instance and play the stream.<br/>
+				Unfortunately I don't know such an android app.<br/>
+				<br/>
+				There might be other ways to solve your need, for example with upnp. But I'm sorry I don't know much
+				about this and can't help you.<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-20">
+			<span class="comment-author">matt</span>
+			<time class="comment-time" datetime="2013-02-28 13:51">on February 28, 2013 at 13:51</time>
+			<p>
+				Brilliant tutorial, worked perfectly for me. As you mentioned, my RasPi's CPU is stuck at around 80%
+				when I have mpd running in this configuration. I'd like to send multiple channels, and even do other
+				things with the RasPi at the same time. Does anyone know of a way to reduce the CPU load? Perhaps by
+				doing less or no processing on the sound files?
+			</p>
+		</li>
+
+		<li id="comment-21">
+			<span class="comment-author">Niko</span>
+			<time class="comment-time" datetime="2013-03-18 15:04">on March 18, 2013 at 15:04</time>
+			<p>
+				all this manipulation works ;)<br/>
+				thanks!!
+			</p>
+		</li>
+
+	</ol>
+</section>

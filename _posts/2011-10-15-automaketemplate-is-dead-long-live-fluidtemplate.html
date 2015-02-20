@@ -1,0 +1,239 @@
+---
+layout: post
+title: Automaketemplate is dead, long live FLUIDTEMPLATE!
+date: 2011-10-15 12:06
+excerpt: Here comes another article by guest author Tomaž Zaman. He demonstrates the mapping of TypoScript with Fluid/HTML Templates using the FLUIDTEMPLATE cObject. He also delivers some easy to understand example code, which includes support for backend layouts (grids).
+tags: 
+  - TYPO3
+  - Fluid
+  - TypoScript
+  - FLUIDTEMPLATE
+  - Automaketemplate
+  - Templavoila
+  - Templates
+---
+
+<section>
+	<p>I'm sure at some point of your TYPO3 experience, you've wondered whether it would be better to use the
+	Automaketemplate or Templavoila! for your template needs. I've used both of them and each has it's pros and cons,
+	which I won't discuss in this post.<br/>This post is about introducing the new, latest and greatest way of
+	integrating your oh-so awesome templates in TYPO3! I'm sure you've heard of it by now: FLUIDTEMPLATE!
+	</p>
+
+	<p>It uses the Fluid templating language (backport from FLOW3 framework, coming on October 20th) that comes as a
+		system extension from TYPO3 4.3 on but it still seems many developers don't know- or use it. The second part of
+		this approach are Backend layouts (grids) that are a part of TYPO3 core as well.
+	</p>
+
+	<h3>TypoScript FLUIDTEMPLATE cObject</h3>
+
+	<p>Without further ado, here's the page object that utilizes FLUIDTEMPLATE:
+	</p>
+	<pre>page = PAGE<br/>page{<br/>&nbsp;&nbsp; typeNum = 0&nbsp;&nbsp; <br/>&nbsp;&nbsp; 10 = FLUIDTEMPLATE<br/>&nbsp;&nbsp; 10 {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; partialRootPath = fileadmin/templates/partials/<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; layoutRootPath = fileadmin/templates/layouts/<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; file.stdWrap.cObject = CASE<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; file.stdWrap.cObject {<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; key.data = levelfield:-1, backend_layout_next_level, slide<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; key.override.field = backend_layout<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; default = TEXT<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; default.value = fileadmin/templates/home.html<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2 = TEXT<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.value = fileadmin/templates/sub.html<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }&nbsp;&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; variables {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left &lt; styles.content.get<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; left.select.where = colPos=1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; content &lt; styles.content.get&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; right &lt; styles.content.get<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; right.select.where = colPos=2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br/><br/>&nbsp;&nbsp; }<br/>}</pre>
+	<p>Notice the file selection is based on what the current BE grid is used, so you can define multiple layouts. Of
+		course in order for this to work, you need to define a few backend grids and remember their UIDs because those
+		are used as keys in the CASE cObject above.
+	</p>
+
+	<h3>Fluid/HTML Template</h3>
+
+	<p>Next, let's look at the home.html which is used in this example:
+	</p>
+	<pre>&lt;div&nbsp;id=&quot;wrap&quot;&gt;<br/>&nbsp;&nbsp;&lt;div&nbsp;id=&quot;menu&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&lt;f:cObject&nbsp;typoscriptObjectPath=&quot;lib.navigation&quot;&nbsp;/&gt;<br/>&nbsp;&nbsp;&lt;/div&gt;<br/>&nbsp;&nbsp;&lt;div&nbsp;id=&quot;left&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&lt;f:format.html&nbsp;parseFuncTSPath=&quot;lib.parseFunc&quot;&gt;{left}&lt;/f:format.html&gt;<br/>&nbsp;&nbsp;&lt;/div&gt;<br/>&nbsp;&nbsp;&lt;div&nbsp;id=&quot;content&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&lt;f:format.html&nbsp;parseFuncTSPath=&quot;lib.parseFunc&quot;&gt;{content}&lt;/f:format.html&gt;<br/>&nbsp;&nbsp;&lt;/div&gt;<br/>&nbsp;&nbsp;&lt;div&nbsp;id=&quot;right&quot;&gt;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&lt;f:format.html&nbsp;parseFuncTSPath=&quot;lib.parseFunc&quot;&gt;{right}&lt;/f:format.html&gt;<br/>&nbsp;&nbsp;&lt;/div&gt;<br/>&lt;/div&gt;</pre>
+	<p>As you can see, you can include other TS-defined objects inside your fluidtemplates as well!
+	</p>
+
+	<p>This is pretty much all there is to it, the most interesting part of this, compared to TemplaVoila!, is that you
+		can modify your HTML templates without the need to refresh (okay, apart from the 'clear cache' button that you
+		are so used to click) or remap anything.<br/>Also there is no additional tables, wizards or extensions, you use
+		what you already get with the core. Enjoy!
+	</p>
+
+	<h3>About the author<span class="Apple-style-span" style="font-size: 12px; font-weight: normal; ">&nbsp;</span></h3>
+
+	<p><img src="/files/images/tomaz-zaman.jpg" title="Tomaz Zaman" height="160" width="137" alt=""/></p>
+
+	<p><a href="http://optiss.si" title="Slovenian TYPO3 Freelancer" class="external-link-new-window">Tomaž Zaman</a> is
+		a Slovenian freelancer with more than 7 years of experience with TYPO3. He has made numerous websites, from
+		small 4-page portfolios, to educational, government and corporate websites and intranets for clients from all
+		across Europe. Since 2011&nbsp;he is a certified TYPO3 integrator.<br/><br/>OPTISS<br/>@: <a
+				href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#116;&#111;&#109;&#97;&#122;&#64;&#111;&#112;&#116;&#105;&#115;&#115;&#46;&#115;&#105;">tomaz&#64;optiss.si</a><br/>W:
+		<a href="http://optiss.si" title="Optiss Tomaž Zaman" class="external-link">http://optiss.si</a><br/>T: +386 30
+		651 645
+	</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">vbhjckfd</span>
+			<time class="comment-time" datetime="2011-10-15 13:40">on October 15, 2011 at 13:40</time>
+			<p>
+				I have to say - nice work. There is one more not reimplemented by typo3-core feature left in templavoila
+				- i'm talking about FCE's: custom content elements are very useful feature.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2011-10-15 14:39">on October 15, 2011 at 14:39</time>
+			<p>
+				Yes, vbhjckfd, you are right and drag&drop in the page module is also missing.<br/>
+				<br/>
+				But there are good news! Joey is just about to fill this gap. Have a look at Grid Elements extension in
+				TER: <a href="http://typo3.org/extensions/repository/view/gridelements/current/" title=Grid Elements
+						(gridelements) TYPO3 Extension in TER">http://typo3.org/extensions/repository/view/gridelements/current/</a>
+				<br/>
+				<br/>
+				I think chances are good to get this one pushed to TYPO3 core.
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author"><a
+					href="http://typo3vagabond.com/13290/typo3/typo3-backend-layouts-the-grid-view/" rel="external">Michael
+				Cannon</a></span>
+			<time class="comment-time" datetime="2011-10-17 19:33">on October 17, 2011 at 19:33</time>
+			<p>
+				Thanks Tomaž for sharing this information. I only recently learned about FLUIDTEMPLATE and am looking
+				forward to their use in upcoming projects. Your tidbits help me out further.
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author"><a href="http://optiss.si" rel="external">Tomaž</a></span>
+			<time class="comment-time" datetime="2011-10-20 16:58">on October 20, 2011 at 16:58</time>
+			<p>
+				My pleasure! :)
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author"><a href="http://www.frstudio.si" rel="external">Robert</a></span>
+			<time class="comment-time" datetime="2012-03-11 15:42">on March 11, 2012 at 15:42</time>
+			<p>
+				Nice post :). What abaut FCE-s like in TemplaVoila?<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2012-03-11 18:21">on March 11, 2012 at 18:21</time>
+			<p>
+				@Robert<br/>
+				Try extension gridelements or fed
+			</p>
+		</li>
+
+		<li id="comment-7">
+			<span class="comment-author">Nick</span>
+			<time class="comment-time" datetime="2012-03-14 14:29">on March 14, 2012 at 14:29</time>
+			<p>
+				Is it possible to start using FLUIDTEMPLATE on a site already started with Templavoila, can you mix the
+				two?
+			</p>
+		</li>
+
+		<li id="comment-8">
+			<span class="comment-author">Nick</span>
+			<time class="comment-time" datetime="2012-03-28 13:08">on March 28, 2012 at 13:08</time>
+			<p>
+				Figured it out in the end! <br/>
+				Had to Enable the classic Page module in Templavoila configuration, in Extension Manager.<br/>
+				Then clear cache etc.<br/>
+				<br/>
+				In "classic Page" you are then able to select backend_layouts in page properties!<br/>
+				<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-9">
+			<span class="comment-author">mihir bhatt</span>
+			<time class="comment-time" datetime="2012-05-10 15:49">on May 10, 2012 at 15:49</time>
+			<p>
+				Thanks, that's what i am looking fore.
+			</p>
+		</li>
+
+		<li id="comment-10">
+			<span class="comment-author">mihir bhatt</span>
+			<time class="comment-time" datetime="2012-05-10 15:50">on May 10, 2012 at 15:50</time>
+			<p>
+				Thanks, that's what i am looking for.
+			</p>
+		</li>
+
+		<li id="comment-11">
+			<span class="comment-author">Sandeep Ranjan</span>
+			<time class="comment-time" datetime="2012-06-01 11:33">on June 01, 2012 at 11:33</time>
+			<p>
+				Thanks,that's what I am looking for.
+			</p>
+		</li>
+
+		<li id="comment-12">
+			<span class="comment-author">terrorfrog</span>
+			<time class="comment-time" datetime="2012-06-04 05:12">on June 04, 2012 at 05:12</time>
+			<p>
+				Actually im very dissapointed about fluid.<br/>
+				Not thats bad but its just a little rework not a desperate needed revolution.<br/>
+				<br/>
+				actually (i know no typo3guy likes to hear that) but the templatemanagement is horrible in typo3 and
+				could have been done way better<br/>
+				<br/>
+				it would be also time that everything - html templates and css code - is storeable in the database and
+				generated as static documents - with a little ligoc behind only needed css classes could be used for a
+				certain page<br/>
+				<br/>
+				jsut an example<br/>
+				<br/>
+				also this would make it possible to store basic layout to further use in 4rd party modules like ttnews
+				(ok thats not really 3rd party)<br/>
+				<br/>
+				i dont get why i always have to define the same box again and again for every module.<br/>
+				<br/>
+				there are other ways - even online editing css classes - some shopsystems for exmaple have this for a
+				long long time<br/>
+				<br/>
+				why do we need todo the work all over again mixed in the backend and textfiles - reloading the same page
+				over and over again<br/>
+				<br/>
+				<br/>
+				dont get me wrong im not talking about click and pray for newbies - also not about killing typoscript
+				<br/>
+				<br/>
+				but <br/>
+				<br/>
+				manythings should be able todo by GUI (which should be reworked either), and database<br/>
+				<br/>
+				so yea typo3 is my favourit because of its flexibility but its also a PIA because of unnessesary working
+				steps and cruel backend<br/>
+				<br/>
+				really look at joomla - its a crappy cms - but big success because of its easy to use backend<br/>
+				<br/>
+				why cant we have such a backend for regular users while the nasty one is for us developers?<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-13">
+			<span class="comment-author"><a href="http://mindstate.michielroos.com" rel="external">Michiel
+				Roos</a></span>
+			<time class="comment-time" datetime="2013-02-04 09:47">on February 04, 2013 at 09:47</time>
+			<p>
+				Take care to use f:format.raw to output TypoScript defined or rendered objects. This ensures that
+				elements like the HTML content element are left alone and are not parsed with the default
+				parseFunc.<br/>
+				I had trouble getting a canvas element to render properly when using f:format.html. Using f:format.raw
+				solved the issue.
+			</p>
+		</li>
+
+	</ol>
+</section>

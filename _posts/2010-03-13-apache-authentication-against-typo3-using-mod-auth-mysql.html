@@ -1,0 +1,172 @@
+---
+layout: post
+title: Apache authentication against TYPO3 using mod_auth_mysql
+date: 2010-03-13 23:50
+excerpt: Web applications often need user accounts to be able to authorize users. TYPO3 for example needs backend users which are stored in the be_users database table. Each application usually has its own user accounts and authorization schemes. But maintaining multiple accounts of the same user for each web application is a pain and should be avoided. Apache can deal with that situation by shipping plenty of authentication modules. Have a look at a little demonstration of mod_auth_mysql.
+tags: 
+  - Apache
+  - Authentication
+  - TYPO3
+  - Server-Administration
+---
+
+<section>
+	<h3>Introduction</h3>
+
+	<p>If you are a provider of several web applications, most of them are probably served by Apache webserver. So
+		chances are that you can use Apache authentication modules to connect the authentication mechanisms of all your
+		applications. That would help to avoid redundant user accounts. A prerequisite is that the applications support
+		the <a href="http://httpd.apache.org/docs/2.2/howto/auth.html" title="Official Apache Auth Docs"
+			   class="external-link">Apache basic auth API</a>. I will now demonstrate how to authenticate against TYPO3
+		BE users from outside of the TYPO3 scope.
+	</p>
+
+	<h3>What software you need to have</h3>
+
+	<p>TYPO3 is usually based on Apache and MySQL. So you almost have anything you need. What is missing is that you&nbsp;install
+		the Apache module mod_auth_mysql. Use the favorite package / software manager of your OS distribution or get the
+		latest version from the&nbsp;<a href="http://modauthmysql.sourceforge.net/"
+										title="mod_auth_mysql project on sourceforge" class="external-link">sourceforge
+			project pages</a>.&nbsp;Please note that the software evolved the past years, resulting in several versions
+		with different configuration parameters.
+	</p>
+
+	<h3>Configuring mod_auth_mysql for authentication against TYPO3</h3>
+
+	<p>The following configuration example is based on Apache 2.2 and mod_auth_mysql 4.3.9 from Debian Squeeze. Put the
+		snippet code into your Apache config, for example inside a .htaccess or <i>&lt;Directory /path/to&gt;</i>
+		directive. Please refer to the above mentioned Apache website, if you are not familiar with Apache
+		configuration.
+	</p>
+	<pre>AuthType Basic<br/>AuthName &quot;User Authentication&quot;<br/>AuthBasicAuthoritative Off<br/>AuthUserFile /dev/null<br/>Auth_MySQL On<br/>Auth_MySQL_Host localhost<br/>Auth_MySQL_DB &lt;<i>$typo_db</i>&gt;<br/>Auth_MySQL_User &lt;<i>$typo_db_username</i>&gt;<br/>Auth_MySQL_Password &lt;<i>$typo_db_password</i>&gt;<br/>Auth_MySQL_Password_Table be_users<br/>Auth_MySQL_Username_Field username<br/>Auth_MySQL_Password_Field password<br/>Auth_MySQL_Encryption_Types PHP_MD5<br/>Require valid-user</pre>
+	<p>The three lines with parameters in &lt;&gt; refer to the values of your TYPO3 configuration which can be found in&nbsp;typo3conf/localconf.php
+	</p>
+
+	<h3>Usage</h3>
+
+	<p>What does it do? When you&nbsp;request a page in a restricted area which needs Apache authentication you will be
+		asked for a username and password:
+	</p>
+
+	<p><img src="/files/images/auth_prompt.png" height="153" width="530" alt=""/>
+	</p>
+
+	<p>The username and the MD5 hashed password are compared with the appropriate data from be_users table of your TYPO3
+		installation. If they match, you will get access to the restricted area.
+	</p>
+
+	<h3>Possible limitations</h3>
+
+	<p>The auth will probably not work when you use the sysext saltedpasswords for BE users. Also keep in mind that you
+		need the protect the user login data with SSL.
+	</p>
+
+	<p>It also seems that the directive names have changed over the time. Some versions use underscores _, some not. The
+		documentations in the web all slightly differ. If you use Debian, you should rely on the information in
+		/usr/share/doc/libapache2-mod-auth-mysql/
+	</p>
+
+	<h3>Applications I have successfully tested</h3>
+	<ul>
+		<li><a href="http://trac.edgewall.org/" title="Trac: Integrated software development suite"
+			   class="external-link">Trac</a></li>
+		<li><a href="http://subversion.apache.org/" title="Subversion: Software version control system"
+			   class="external-link">Subversion</a></li>
+		<li><a href="http://httpd.apache.org/docs/2.2/mod/mod_dav.html"
+			   title="webdav implementation for the Apache server" class="external-link">Apache Webdav (mod_dav)</a>
+		</li>
+	</ul>
+	<h3>Other authentication modules</h3>
+
+	<p>There are plenty of other authentication modules for Apache, for example: LDAP, PAM, SASL, openID, Radius, or
+		Postgre. They all implement the same scheme, so&nbsp;the usage is easy and&nbsp;compatibility is great.</p>
+</section>
+
+{% include post-taglist.html %}
+
+<section class="comments"><h3>Comments</h3>
+	<ol>
+
+		<li id="comment-1">
+			<span class="comment-author">Peter</span>
+			<time class="comment-time" datetime="2010-03-15 10:37">on March 15, 2010 at 10:37</time>
+			<p>
+				A possible idea to use this feature is to protect the TYPO3 backend via an auth service. But how does
+				mod_auth_mysql behave? Is there one db query for each page/image/css request then? This might become an
+				performance issue.
+			</p>
+		</li>
+
+		<li id="comment-2">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-03-16 11:44">on March 16, 2010 at 11:44</time>
+			<p>
+				AFAIK Apache uses a session cache once you are loged in. So performance would not be an issue here.<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-3">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-04-02 18:59">on April 02, 2010 at 18:59</time>
+			<p>
+				I am sorry Peter, I have to correct myself.<br/>
+				It seems that APACHE DOES NOT USE AN AUTH SESSION CACHE. I did some debugging and MySQL logs shows a
+				SELECT query for each HTTP request. DB connect is kept alive, but auth data itself is not cached.<br/>
+				<br/>
+				There is a rather outdated module called mod_auth_cache, but I did not find a version which was build
+				for Apache 2.2<br/>
+				<br/>
+				If anyone has suggestions to tune performance, I'd be glad.<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-4">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-04-12 13:04">on April 12, 2010 at 13:04</time>
+			<p>
+				There are three MySQL-ways of tuning performance:<br/>
+				<br/>
+				1) Use a key(index) in the be_users table. Fortunately there is already one implemented, so you don't
+				have to care.<br/>
+				<br/>
+				2) Use MySQL query cache, which will reduce response time and the load on MySQL.<br/>
+				<br/>
+				3) Use persistent MySQL connections. mod_auth_mysql uses persitence by default. That means connection
+				overhead (creating socket, auth, ...) is reduced.
+			</p>
+		</li>
+
+		<li id="comment-5">
+			<span class="comment-author">MValdez</span>
+			<time class="comment-time" datetime="2010-04-19 23:12">on April 19, 2010 at 23:12</time>
+			<p>
+				Thanks for posting this info, this is exactly what I was looking for. I am still a bit worried that the
+				auth query is done for each connection. I guess that increasing the keepalive timeout in apache would
+				reduce the need for a different connection for each file.<br/>
+				<br/>
+				Also I was worry about the legend in the SourceForge page of the module about the project being inactive
+				since last year.<br/>
+				<br/>
+				Regards,<br/>
+				<br/>
+				MV<br/>
+
+			</p>
+		</li>
+
+		<li id="comment-6">
+			<span class="comment-author">Steffen</span>
+			<time class="comment-time" datetime="2010-04-20 10:19">on April 20, 2010 at 10:19</time>
+			<p>
+				keepalive does only reduce the number of TCP/IP connections, while authentication is done on a HTTP
+				basis. So I guess there's no gain with keepalive.<br/>
+				<br/>
+				You'll never know what the future brings... But if you use Debian you are safe: they still support the
+				mod and provide security updates and compatibility to Apache/MySQL.
+			</p>
+		</li>
+
+	</ol>
+</section>
