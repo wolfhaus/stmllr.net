@@ -1,3 +1,10 @@
+<FilesMatch "\.html$">
+        Header unset Last-Modified
+        FileETag MTime Size
+        ExpiresActive on
+        ExpiresDefault "access plus 1 days"
+</FilesMatch>
+
 <FilesMatch "\.(js|css|png)$">
         Header unset Last-Modified
         FileETag MTime Size
