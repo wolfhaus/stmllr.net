@@ -108,7 +108,7 @@ class CustomPageLayoutView implements PageLayoutViewDrawItemHookInterface {
 
 		$drawItem = FALSE;
 		$header = '<strong>' . htmlspecialchars($row['header']) . '</strong><br />';
-		$item = $row['tx_demo_name'] . '<br /><br />';
+		$item = htmlspecialchars($row['tx_demo_name']) . '<br><br>';
 		$item .= $parentObject->thumbCode($row, 'tt_content', 'tx_demo_portrait');
 	}
 }
