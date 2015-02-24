@@ -78,7 +78,8 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php'][
 	'Vendor\\Demo\\Hooks\\CustomPageLayoutView';
 {% endhighlight %}
 
-EXT:demo/Classes/Hooks/CustomPageLayoutView.php
+<span class="hyphenation">EXT:demo/Classes/Hooks/CustomPageLayoutView.php</span>
+
 {% highlight php %}
 <?php
 namespace Vendor\Demo\Hooks;

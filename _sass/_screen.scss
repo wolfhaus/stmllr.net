@@ -57,7 +57,43 @@ blockquote {
 	border: 1px dotted #999;
 	padding: 4px;
 	background-color: $pre-background-color;
+}
+
+blockquote,
+code {
 	font-size: 0.75em;
+	line-height: 0.75em;
+}
+
+.hyphenation {
+	-ms-word-break: break-all;
+	word-break: break-all;
+
+	/* Non standard for webkit */
+	word-break: break-word;
+
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	-ms-hyphens: auto;
+	hyphens: auto;
+}
+
+.no-hyphenation {
+	-ms-word-break: none;
+	word-break: normal;
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+code {
+	@extend .hyphenation;
+}
+
+pre > code {
+	@extend .no-hyphenation;
+
 }
 
 .wrapper {
@@ -208,7 +244,6 @@ footer {
 	margin: 0;
 	padding: 20px 0;
 }
-
 
 /* ==========================================================================
    Media Queries
