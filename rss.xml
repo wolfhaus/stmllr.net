@@ -14,7 +14,17 @@ layout: null
     {% for post in site.posts limit:10 %}
       <item>
         <title>{{ post.title | xml_escape }}</title>
-        <description>&lt;h3&gt;{{ post.excerpt }}&lt;/h3&gt;{{ post.content | xml_escape }}</description>
+        <description>
+			&lt;h3&gt;{{ post.excerpt }}&lt;/h3&gt;
+			&lt;p&gt;by Steffen Müller on &lt;a href="https://stmllr.net/" rel="publisher" title="Personal blog of Steffen Müller"&gt;stmllr.net&lt;/a&gt;&lt;/p&gt;
+			{{ post.content | xml_escape }}
+			&lt;p&gt;The content of this website is licensed under the &lt;a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/" title="Creative Commons License"&gt;Creative Commons License CC BY-SA 3.0&lt;/a&gt;
+			You are free to share (copy, distribute and transmit) and to remix (to adapt) the work under the following conditions:&lt;/p&gt;
+			&lt;ul&gt;
+			&lt;li&gt;You must attribute the work by mentioning the name of the author (Steffen Müller) and setting a link back to the original article using its URL.&lt;/li&gt;
+			&lt;li&gt;If you alter, transform, or build upon this work, you may distribute the resulting work only under the same or similar license to this one.&lt;/li&gt;
+			&lt;/ul&gt;
+		</description>
         <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
         <link>{{ post.url | prepend: site.baseurl | prepend: site.url }}</link>
         <guid isPermaLink="true">{{ post.url | prepend: site.baseurl | prepend: site.url }}</guid>
