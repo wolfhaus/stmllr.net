@@ -30,6 +30,8 @@ If you have custom fields which store the important information, the preview wid
 Get this issue solved by hooking into the rendering process of the preview widget.
 Unfortunately there is no clean-and-simple-API for that, but you can solve it with a hook and some PHP magic.
 
+### Specification
+
 Let's use the [modelling by example](http://everzet.com/post/99045129766/introducing-modelling-by-example)
 approach from [Behavior Driven Development](http://dannorth.net/introducing-bdd/) to describe our
 feature:
