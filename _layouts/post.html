@@ -9,9 +9,7 @@ layout: default
 
   {{ content }}
 
-	{% if page.origin != 'import' %}
-		{% include post-taglist.html %}
-	{% endif %}
+  {% if page.origin != 'import' %}{% include post-taglist.html %}{% endif %}
 
   {% include post-comments.html %}
 
